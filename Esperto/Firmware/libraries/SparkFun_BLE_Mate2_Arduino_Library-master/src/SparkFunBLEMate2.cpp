@@ -1,16 +1,4 @@
-/****************************************************************
-Core management functions for BC118 modules.
 
-Based on the code I developed for the BC127.
-
-This code is beerware; if you use it, please buy me (or any other
-SparkFun employee) a cold beverage next time you run into one of
-us at the local.
-
-30 Oct 2014- Mike Hord, SparkFun Electronics
-
-Code developed in Arduino 1.0.6, on an Arduino Pro 5V.
-****************************************************************/
 
 #include "SparkFunBLEMate2.h"
 #include <Arduino.h>
