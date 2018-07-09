@@ -3,7 +3,6 @@
 #include <RTCZero.h>
 #include "MAX30105.h"
 #include "heartRate.h"
-#include <SparkFunBLEMate2.h>
 #include "Adafruit_FRAM_I2C.h"
 #include "avdweb_SAMDtimer.h"
 #include <SPI.h>
@@ -19,10 +18,12 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
 Adafruit_FRAM_I2C FRAM = Adafruit_FRAM_I2C();
 
 // BLE variables
+#define NOTIF_COUNTER_MAX 10 // how many seconds notification appears on screen for
 char dateBT[15]; // date info MM/DD/YYYY
 char timeBT[15]; // time info HH:MM:SS MM
 char callBT[20]; // caller number info
 char textBT[20]; // text number info
+volatile uint8_t notifCounter = 0;
 uint8_t ble_rx_buffer[21];
 uint8_t ble_rx_buffer_len = 0;
 uint8_t ble_connection_state = false;
@@ -33,7 +34,6 @@ uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 
 // Real Time Clock Variables
 RTCZero rtc; // instance of RTCZero class
-bool isRTCInit; // determines if RTC has been initialized
 bool deviceInit = 0; // prevents time showing up without initial BLE connection
 
 // MPU9250
@@ -52,11 +52,12 @@ byte heartRates[arraySizeHR]; // array containing latest HR values
 byte heartRateIndex = 0; // index latest value was inputted into array
 long prevHeartBeat = 0; // time at which the last heart beat occurred
 float heartRate; // current heart rate
-int heartRateAvg = 0; // average heart rate which will we be displayed
+int heartRateAvg; // average heart rate which will we be displayed
 long timeLastHRBeat = 0;
 
 // FRAM Variables
 uint16_t countFRAM = 0; // stores the address which is going to be used by the FRAM
+bool isDataSent = 0; // Determines if initial data was sent for the current BLE connection
 
 // 1Hz Timer ISR -- 1Hz timer which times writing to FRAM, BLE, display
 volatile uint8_t ISR_CTR = 0; // counter used in addition to timer to determine when memory is being stored/sent
@@ -64,13 +65,14 @@ bool updateDisplay_flag = 0; // control when display is updated
 void ISR_timer3(struct tc_module *const module_inst) 
 { 
   ISR_CTR = ISR_CTR + 1;
+  notifCounter = notifCounter + 1;
   updateDisplay_flag = 1; // Update display
 }
-SAMDtimer timer3_1Hz = SAMDtimer(3, ISR_timer3, 1e6); // FRAM timer interrupt
+SAMDtimer timer3_1Hz = SAMDtimer(3, ISR_timer3, 1e6); // 1Hz timer interrupt
 
 // Battery Variables
-const uint8_t chargePin = 0; // TODO: needs to be implemented
-const uint8_t batteryPin = 1; // analog 1: used to determine when battery is low/high
+const uint8_t chargePin = 3; // digital 3 - used to determine if charging is complete
+const uint8_t batteryPin = 0; // analog 1: used to determine when battery is low/high
 const float referenceVolts = 5.0; // the default reference on a 5-volt board
 
 // Bootloader
@@ -116,7 +118,7 @@ void updateDisplay()
   if (strlen(callBT) >= 10 && ble_connection_state == true)
   {
     u8g2.setFont(u8g2_font_profont11_tf);
-    // print time top left corner
+    // print time top left corner TODO: pass into update time function
     u8g2.drawStr(0, 10, timeBT);
 
     u8g2.setFont(u8g2_font_profont22_tf);
@@ -143,49 +145,50 @@ void updateDisplay()
   {
     u8g2.setFont(u8g2_font_profont11_tf);
     // display date
-    if(ble_connection_state == true)
-      u8g2.drawStr(0, 10, dateBT);
-    else
-    {
-      u8g2.setCursor(0, 10);
-      u8g2.print(String(rtc.getMonth()) + "/" + String(rtc.getDay()) + "/20" + String(rtc.getYear()));
-    }
+    u8g2.setCursor(0, 10);
+    u8g2.print(String(rtc.getMonth()) + "/" + String(rtc.getDay()) + "/20" + String(rtc.getYear()));
 
     // display heart rate
-    u8g2.setCursor(14, 62);
-    u8g2.print(String(heartRateAvg) + " bpm");
     u8g2.drawXBMP(0, 54, 10, 10, heart);
+    if(heartRateAvg > 40){
+      u8g2.setCursor(14, 62);
+      u8g2.print(String(heartRateAvg) + " bpm");
+    }
 
     // display steps
     u8g2.setCursor(78, 62);
     u8g2.print(String(stepCount*2) + " stp");
     u8g2.drawXBMP(64, 54, 10, 10, mountain);
-
-    // display time
+    
+    // Display time
     u8g2.setFont(u8g2_font_profont22_tf);
-    // if connected to Bluetooth
-    if(ble_connection_state == true)
-    {
-      // center time on display
-      if (strlen(timeBT) == 7)
-        u8g2.drawStr(20, 38, timeBT);
-      else if (strlen(timeBT) == 8)
-        u8g2.drawStr(13, 38, timeBT);
-    }
-    // if not connected to Bluetooth
-    else
-    {
+    // Convert time from 24 hour clock to meridian time
+    uint8_t hour = rtc.getHours();
+    if(hour >= 12){
       u8g2.setCursor(13, 38);
+      if(hour > 12)
+        hour = hour - 12;
       // time does not come with leading 0's, add to display string if needed
-      if(rtc.getMinutes() < 10 && rtc.getSeconds() < 10)
-        u8g2.print(String(rtc.getHours()) + ":0" + String(rtc.getMinutes()) + ":0" + String(rtc.getSeconds()));
-      else if(rtc.getMinutes() < 10)
-        u8g2.print(String(rtc.getHours()) + ":0" + String(rtc.getMinutes()) + ":" + String(rtc.getSeconds()));
-      else if(rtc.getSeconds() < 10)
-        u8g2.print(String(rtc.getHours()) + ":" + String(rtc.getMinutes()) + ":0" + String(rtc.getSeconds()));
+      if(rtc.getMinutes() < 10)
+        u8g2.print(String(hour) + ":0" + String(rtc.getMinutes()) + " PM");
       else
-        u8g2.print(String(rtc.getHours()) + ":" + String(rtc.getMinutes()) + ":" + String(rtc.getSeconds()));
-    }   
+        u8g2.print(String(hour) + ":" + String(rtc.getMinutes()) + " PM");
+    }
+    else{
+      // in case it is 12AM - we do not want 0 showing up as the hour
+      if(hour == 0)
+        hour = 12;
+      // determine position of time based on how many digits
+      if(hour >= 10)
+        u8g2.setCursor(13, 38);
+      else
+        u8g2.setCursor(20, 38);
+      // time does not come with leading 0's, add to display string if needed
+      if(rtc.getMinutes() < 10)
+        u8g2.print(String(hour) + ":0" + String(rtc.getMinutes()) + " AM");
+      else
+        u8g2.print(String(hour) + ":" + String(rtc.getMinutes()) + " AM");
+    }
   }
   
   // draw BT logo only if connected
@@ -194,46 +197,39 @@ void updateDisplay()
 
   // obtain and display battery status
   int battVoltRaw = analogRead(batteryPin);
-  float battVolt = (battVoltRaw / 1023.0) * referenceVolts;
+  float battVolt = 2*(battVoltRaw / 1023.0) * referenceVolts; // 2* because of voltage divider config
+  int isChargeComplete = digitalRead(chargePin); // HIGH when charging is complete
   // display full battery
-  if (battVolt >= 3.6)
+  if ((battVolt >= 3.5 && battVolt <= 4.5) || isChargeComplete)
     u8g2.drawXBMP(105, 0, 10, 10, battHigh);
+  // display charging battery - toggle when charging
+  else if (battVolt > 4.5 && !isChargeComplete){
+    if(ISR_CTR%3 == 0)
+      u8g2.drawXBMP(105, 0, 10, 10, battLow);
+    else if(ISR_CTR%3 == 1)
+      u8g2.drawXBMP(105, 0, 10, 10, battMed);
+    else
+      u8g2.drawXBMP(105, 0, 10, 10, battHigh);
+  }
   // display low battery
-  if (battVolt < 3.6)
+  else if (battVolt < 3.5)
     u8g2.drawXBMP(105, 0, 10, 10, battLow);
-  // TO DO: ADD CHARGING PICTURE
 }
 
 void setRTCTime()
 {
-  byte setTimeDate;
-  
-  // set time (HH:MM PM)
-  // determine how many bytes to read as format can be HH:MM or H:MM
-  if(strlen(timeBT) == 7)
-    setTimeDate = stringToByte(timeBT, 1);
-  else
-    setTimeDate = stringToByte(timeBT, 2);
-  // determine if PM and add 12 hours if so
-  if(memchr(timeBT, 'P', strlen(timeBT)) != NULL)
-     rtc.setHours(setTimeDate + 12);
-  else
-    rtc.setHours(setTimeDate);
-  // determine position of pointer (start of MM)as format can be HH:MM or H:MM
-  if(strlen(timeBT) == 7)
-    setTimeDate = stringToByte(timeBT+2, 2);
-  else
-    setTimeDate = stringToByte(timeBT+3, 2);
-  rtc.setMinutes(setTimeDate);
-  rtc.setSeconds(30);
-  
-  // set date (MM/DD/YYYY)
-  setTimeDate = stringToByte(dateBT, 2);
-  rtc.setMonth(setTimeDate);
-  setTimeDate = stringToByte(dateBT+3, 2);
-  rtc.setDay(setTimeDate);
-  setTimeDate = stringToByte(dateBT+8, 2); // only get the last two digits of the year
-  rtc.setYear(setTimeDate);
+  // set time (HH:MM:SS) - 24 hour clock
+  rtc.setHours(stringToByte(timeBT, 2));
+  rtc.setMinutes(stringToByte(timeBT+3, 2));
+  rtc.setSeconds(stringToByte(timeBT+6, 2));
+}
+
+void setRTCDate()
+{
+  // set date (DD/MM/YYYY)
+  rtc.setDay(stringToByte(dateBT, 2));
+  rtc.setMonth(stringToByte(dateBT+3, 2));
+  rtc.setYear(stringToByte(dateBT+8, 2)); // only get the last two digits of the year
 }
 
 void writeFRAM()
@@ -241,27 +237,34 @@ void writeFRAM()
   // Ensure memory is not full
   if(countFRAM < 32768)
   {
-     FRAM.write8(countFRAM, heartRate);
+     FRAM.write8(countFRAM, heartRateAvg);
      FRAM.write8(countFRAM+1, stepCount >> 8);
      FRAM.write8(countFRAM+2, stepCount);
+     FRAM.write8(countFRAM+3, 0);
      countFRAM+=4; // 4 byte alligned 
   }
+  // New data written to FRAM - reset flag
+  isDataSent = 0;
 }
 
 void burstTransferFRAM()
 {
-  for(int i = 0; i < countFRAM; i+=20) // 20 byte packages
+  uint8_t blePacket[20];
+  int i;
+  int j;
+  
+  for(i = 0; i < countFRAM; i+=20) // 20 byte packages
   {
-    uint8_t blePacket[25];
     // Compile data packet
-    for(int j = 0; j < 20; j++)
+    for(j = 0; (j < 20) && ((i+j) < countFRAM); j++)
     {
       blePacket[j] = FRAM.read8(i+j);
     }
     // TODO: Possibly fix - add intermediate display if too slow
-    Write_UART_TX((char*)blePacket, 20);
+    Write_UART_TX((char*)blePacket, j);
   }
   countFRAM = 0; // Go back to first FRAM address
+  isDataSent = true;
 }
 
 void countSteps()
@@ -338,15 +341,25 @@ void loop()
   //Check if data is available
   if (ble_rx_buffer_len) 
   { 
-    if(strncmp((const char*)ble_rx_buffer, "D:", 2) == 0)
-      strcpy(dateBT, (const char*)ble_rx_buffer+2);
-    else if(strncmp((const char*)ble_rx_buffer, "T:", 2) == 0)
-      strcpy(timeBT, (const char*)ble_rx_buffer+2);
-    else if(strncmp((const char*)ble_rx_buffer, "C:", 2) == 0)
-      strcpy(callBT, (const char*)ble_rx_buffer+2);
-    else if(strncmp((const char*)ble_rx_buffer, "M:", 2) == 0)
-      strcpy(textBT, (const char*)ble_rx_buffer+2);
-    ble_rx_buffer_len = 0;//clear afer reading
+    if(strncmp((const char*)ble_rx_buffer + 2, "/", 1) == 0){
+      strcpy(dateBT, (const char*)ble_rx_buffer);
+      setRTCDate();
+    }
+    else if(strncmp((const char*)ble_rx_buffer + 2, ":", 1) == 0){
+      strcpy(timeBT, (const char*)ble_rx_buffer);
+      setRTCTime();
+    }
+    else if(strncmp((const char*)ble_rx_buffer, "C", 1) == 0){
+        strcpy(callBT, (const char*)ble_rx_buffer+1);
+        notifCounter = 0;
+    }
+    else if(strncmp((const char*)ble_rx_buffer, "M", 1) == 0){
+        strcpy(textBT, (const char*)ble_rx_buffer+1);
+        notifCounter = 0;
+    }
+
+    //clear buffer afer reading
+    ble_rx_buffer_len = 0;
 
     // update display
     u8g2.firstPage();
@@ -354,25 +367,23 @@ void loop()
       updateDisplay();
     } while ( u8g2.nextPage() );
 
-    // If device was just disconnected
-    if(isRTCInit == true || !deviceInit)
+    // Check if FRAM data has been sent during this connection
+    if(isDataSent == false)
     {
       burstTransferFRAM();
-      isRTCInit = false;
     }
 
     deviceInit = 1; // Established initial BLE connection
   }
 
-  if(ble_connection_state == false && updateDisplay_flag && deviceInit)
-  {
-    // set time based off last Bluetooth connection
-    if(isRTCInit == false)
-    {
-      setRTCTime();
-      isRTCInit = true;
-    }
-    
+  // Check to see if notifications need to be cleared - add NULL terminator
+  if(notifCounter == NOTIF_COUNTER_MAX){
+    callBT[0] = '\0';
+    textBT[0] = '\0';
+  }
+
+  if(updateDisplay_flag && deviceInit)
+  {    
     // update display
     u8g2.firstPage();
     do {
@@ -400,8 +411,8 @@ void loop()
   }
 
   // Determine whether data is sent to FRAM or BLE
-  // Write to FRAM every 60 seconds
-  if(ISR_CTR >= 60 && !ble_connection_state)
+  // Write to FRAM every 30 seconds
+  if(ISR_CTR >= 30 && !ble_connection_state)
   {
     writeFRAM();
     ISR_CTR = 0;
@@ -410,10 +421,11 @@ void loop()
   else if(ISR_CTR >= 30 && ble_connection_state)
   {
     // TODO: Possibly fix
-    uint8_t txBuf[5];
-    txBuf[0] = heartRate;
+    uint8_t txBuf[4];
+    txBuf[0] = heartRateAvg;
     txBuf[1] = stepCount >> 8;
     txBuf[2] = stepCount;
+    txBuf[3] = 0;
     Write_UART_TX((char*)txBuf, 4);
     ISR_CTR = 0;
   }
@@ -482,7 +494,7 @@ void Write_UART_TX(char* TXdata, uint8_t datasize)
 void setConnectable(void)
 {
   // Set device to connectable
-  const char local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME, 'E', 's', 'p', 'e', 'r', 't', 'o', ' ', 'W', 'a', 't', 'c', 'h'};
+  const char local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME, 'E', 's', 'p', 'e', 'r', 't', 'o'};
   hci_le_set_scan_resp_data(0, NULL);
   aci_gap_set_discoverable(ADV_IND,
                            (ADV_INTERVAL_MIN_MS * 1000) / 625, (ADV_INTERVAL_MAX_MS * 1000) / 625,

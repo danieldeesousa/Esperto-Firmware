@@ -8,34 +8,34 @@
 </settings>
 <grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
-<layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
-<layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
-<layer number="3" name="Route3" color="4" fill="3" visible="no" active="no"/>
-<layer number="4" name="Route4" color="1" fill="4" visible="no" active="no"/>
-<layer number="5" name="Route5" color="4" fill="4" visible="no" active="no"/>
-<layer number="6" name="Route6" color="1" fill="8" visible="no" active="no"/>
-<layer number="7" name="Route7" color="4" fill="8" visible="no" active="no"/>
-<layer number="8" name="Route8" color="1" fill="2" visible="no" active="no"/>
-<layer number="9" name="Route9" color="4" fill="2" visible="no" active="no"/>
-<layer number="10" name="Route10" color="1" fill="7" visible="no" active="no"/>
-<layer number="11" name="Route11" color="4" fill="7" visible="no" active="no"/>
-<layer number="12" name="Route12" color="1" fill="5" visible="no" active="no"/>
-<layer number="13" name="Route13" color="4" fill="5" visible="no" active="no"/>
-<layer number="14" name="Route14" color="1" fill="6" visible="no" active="no"/>
-<layer number="15" name="Route15" color="4" fill="6" visible="no" active="no"/>
-<layer number="16" name="Bottom" color="1" fill="1" visible="no" active="no"/>
-<layer number="17" name="Pads" color="2" fill="1" visible="no" active="no"/>
-<layer number="18" name="Vias" color="2" fill="1" visible="no" active="no"/>
-<layer number="19" name="Unrouted" color="6" fill="1" visible="no" active="no"/>
-<layer number="20" name="Dimension" color="24" fill="1" visible="no" active="no"/>
-<layer number="21" name="tPlace" color="7" fill="1" visible="no" active="no"/>
-<layer number="22" name="bPlace" color="7" fill="1" visible="no" active="no"/>
-<layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="no"/>
-<layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="no"/>
-<layer number="25" name="tNames" color="7" fill="1" visible="no" active="no"/>
-<layer number="26" name="bNames" color="7" fill="1" visible="no" active="no"/>
-<layer number="27" name="tValues" color="7" fill="1" visible="no" active="no"/>
-<layer number="28" name="bValues" color="7" fill="1" visible="no" active="no"/>
+<layer number="1" name="Top" color="4" fill="1" visible="yes" active="no"/>
+<layer number="2" name="Route2" color="1" fill="3" visible="yes" active="no"/>
+<layer number="3" name="Route3" color="4" fill="3" visible="yes" active="no"/>
+<layer number="4" name="Route4" color="1" fill="4" visible="yes" active="no"/>
+<layer number="5" name="Route5" color="4" fill="4" visible="yes" active="no"/>
+<layer number="6" name="Route6" color="1" fill="8" visible="yes" active="no"/>
+<layer number="7" name="Route7" color="4" fill="8" visible="yes" active="no"/>
+<layer number="8" name="Route8" color="1" fill="2" visible="yes" active="no"/>
+<layer number="9" name="Route9" color="4" fill="2" visible="yes" active="no"/>
+<layer number="10" name="Route10" color="1" fill="7" visible="yes" active="no"/>
+<layer number="11" name="Route11" color="4" fill="7" visible="yes" active="no"/>
+<layer number="12" name="Route12" color="1" fill="5" visible="yes" active="no"/>
+<layer number="13" name="Route13" color="4" fill="5" visible="yes" active="no"/>
+<layer number="14" name="Route14" color="1" fill="6" visible="yes" active="no"/>
+<layer number="15" name="Route15" color="4" fill="6" visible="yes" active="no"/>
+<layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="no"/>
+<layer number="17" name="Pads" color="2" fill="1" visible="yes" active="no"/>
+<layer number="18" name="Vias" color="2" fill="1" visible="yes" active="no"/>
+<layer number="19" name="Unrouted" color="6" fill="1" visible="yes" active="no"/>
+<layer number="20" name="Dimension" color="24" fill="1" visible="yes" active="no"/>
+<layer number="21" name="tPlace" color="7" fill="1" visible="yes" active="no"/>
+<layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="no"/>
+<layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="no"/>
+<layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="no"/>
+<layer number="25" name="tNames" color="7" fill="1" visible="yes" active="no"/>
+<layer number="26" name="bNames" color="7" fill="1" visible="yes" active="no"/>
+<layer number="27" name="tValues" color="7" fill="1" visible="yes" active="no"/>
+<layer number="28" name="bValues" color="7" fill="1" visible="yes" active="no"/>
 <layer number="29" name="tStop" color="7" fill="3" visible="no" active="no"/>
 <layer number="30" name="bStop" color="7" fill="6" visible="no" active="no"/>
 <layer number="31" name="tCream" color="7" fill="4" visible="no" active="no"/>
@@ -44,8 +44,8 @@
 <layer number="34" name="bFinish" color="6" fill="6" visible="no" active="no"/>
 <layer number="35" name="tGlue" color="7" fill="4" visible="no" active="no"/>
 <layer number="36" name="bGlue" color="7" fill="5" visible="no" active="no"/>
-<layer number="37" name="tTest" color="7" fill="1" visible="no" active="no"/>
-<layer number="38" name="bTest" color="7" fill="1" visible="no" active="no"/>
+<layer number="37" name="tTest" color="7" fill="1" visible="yes" active="no"/>
+<layer number="38" name="bTest" color="7" fill="1" visible="yes" active="no"/>
 <layer number="39" name="tKeepout" color="4" fill="11" visible="no" active="no"/>
 <layer number="40" name="bKeepout" color="1" fill="11" visible="no" active="no"/>
 <layer number="41" name="tRestrict" color="4" fill="10" visible="no" active="no"/>
@@ -53,19 +53,19 @@
 <layer number="43" name="vRestrict" color="2" fill="10" visible="no" active="no"/>
 <layer number="44" name="Drills" color="7" fill="1" visible="no" active="no"/>
 <layer number="45" name="Holes" color="7" fill="1" visible="no" active="no"/>
-<layer number="46" name="Milling" color="3" fill="1" visible="no" active="no"/>
-<layer number="47" name="Measures" color="7" fill="1" visible="no" active="no"/>
-<layer number="48" name="Document" color="7" fill="1" visible="no" active="no"/>
-<layer number="49" name="Reference" color="7" fill="1" visible="no" active="no"/>
-<layer number="50" name="dxf" color="7" fill="1" visible="no" active="no"/>
-<layer number="51" name="tDocu" color="7" fill="1" visible="no" active="no"/>
-<layer number="52" name="bDocu" color="7" fill="1" visible="no" active="no"/>
-<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="no" active="no"/>
-<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="no" active="no"/>
-<layer number="56" name="wert" color="7" fill="1" visible="no" active="no"/>
-<layer number="57" name="tCAD" color="7" fill="1" visible="no" active="no"/>
-<layer number="59" name="tCarbon" color="7" fill="1" visible="no" active="no"/>
-<layer number="60" name="bCarbon" color="7" fill="1" visible="no" active="no"/>
+<layer number="46" name="Milling" color="3" fill="1" visible="yes" active="no"/>
+<layer number="47" name="Measures" color="7" fill="1" visible="yes" active="no"/>
+<layer number="48" name="Document" color="7" fill="1" visible="yes" active="no"/>
+<layer number="49" name="Reference" color="7" fill="1" visible="yes" active="no"/>
+<layer number="50" name="dxf" color="7" fill="1" visible="yes" active="no"/>
+<layer number="51" name="tDocu" color="7" fill="1" visible="yes" active="no"/>
+<layer number="52" name="bDocu" color="7" fill="1" visible="yes" active="no"/>
+<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="yes" active="no"/>
+<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="yes" active="no"/>
+<layer number="56" name="wert" color="7" fill="1" visible="yes" active="no"/>
+<layer number="57" name="tCAD" color="7" fill="1" visible="yes" active="no"/>
+<layer number="59" name="tCarbon" color="7" fill="1" visible="yes" active="no"/>
+<layer number="60" name="bCarbon" color="7" fill="1" visible="yes" active="no"/>
 <layer number="88" name="SimResults" color="9" fill="1" visible="yes" active="yes"/>
 <layer number="89" name="SimProbes" color="9" fill="1" visible="yes" active="yes"/>
 <layer number="90" name="Modules" color="5" fill="1" visible="yes" active="yes"/>
@@ -1691,22 +1691,88 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 <text x="-1.27" y="0" size="0.6096" layer="27">&gt;VALUE</text>
 <text x="0" y="0" size="0.6096" layer="25">&gt;NAME</text>
 </package>
+<package name="R0201_SEMCO_RC0603">
+<wire x1="-0.3" y1="0.15" x2="0.3" y2="0.15" width="0.05" layer="21"/>
+<wire x1="0.3" y1="0.15" x2="0.3" y2="-0.15" width="0.05" layer="21"/>
+<wire x1="0.3" y1="-0.15" x2="-0.3" y2="-0.15" width="0.05" layer="21"/>
+<wire x1="-0.3" y1="-0.15" x2="-0.3" y2="0.15" width="0.05" layer="21"/>
+<smd name="1" x="-0.27" y="0" dx="0.29" dy="0.37" layer="1"/>
+<smd name="2" x="0.27" y="0" dx="0.29" dy="0.37" layer="1"/>
+<text x="-1.27" y="0" size="0.6096" layer="27">&gt;VALUE</text>
+<text x="0" y="0" size="0.6096" layer="25">&gt;NAME</text>
+</package>
+<package name="R0402_STACKPOLE_HCJ0402">
+<wire x1="-0.5" y1="0.25" x2="0.5" y2="0.25" width="0.05" layer="21"/>
+<wire x1="0.5" y1="0.25" x2="0.5" y2="-0.25" width="0.05" layer="21"/>
+<wire x1="0.5" y1="-0.25" x2="-0.5" y2="-0.25" width="0.05" layer="21"/>
+<wire x1="-0.5" y1="-0.25" x2="-0.5" y2="0.25" width="0.05" layer="21"/>
+<smd name="1" x="-0.45" y="0" dx="0.5" dy="0.6" layer="1"/>
+<smd name="2" x="0.45" y="0" dx="0.5" dy="0.6" layer="1"/>
+<text x="-1.27" y="0" size="0.6096" layer="27">&gt;VALUE</text>
+<text x="0" y="0" size="0.6096" layer="25">&gt;NAME</text>
+</package>
+<package name="R0402_VISHAY_CRCW0402-HP">
+<wire x1="-0.5" y1="0.25" x2="0.5" y2="0.25" width="0.05" layer="21"/>
+<wire x1="0.5" y1="0.25" x2="0.5" y2="-0.25" width="0.05" layer="21"/>
+<wire x1="0.5" y1="-0.25" x2="-0.5" y2="-0.25" width="0.05" layer="21"/>
+<wire x1="-0.5" y1="-0.25" x2="-0.5" y2="0.25" width="0.05" layer="21"/>
+<smd name="1" x="-0.525" y="0" dx="0.6" dy="0.6" layer="1"/>
+<smd name="2" x="0.525" y="0" dx="0.6" dy="0.6" layer="1"/>
+<text x="-1.27" y="0" size="0.6096" layer="27">&gt;VALUE</text>
+<text x="0" y="0" size="0.6096" layer="25">&gt;NAME</text>
+</package>
+<package name="R0603_VISHAY_MCT0603">
+<wire x1="-0.8" y1="0.4" x2="0.8" y2="0.4" width="0.05" layer="21"/>
+<wire x1="0.8" y1="0.4" x2="0.8" y2="-0.4" width="0.05" layer="21"/>
+<wire x1="0.8" y1="-0.4" x2="-0.8" y2="-0.4" width="0.05" layer="21"/>
+<wire x1="-0.8" y1="-0.4" x2="-0.8" y2="0.4" width="0.05" layer="21"/>
+<smd name="1" x="-0.675" y="0" dx="0.7" dy="0.95" layer="1"/>
+<smd name="2" x="0.675" y="0" dx="0.7" dy="0.95" layer="1"/>
+<text x="-1.27" y="0.27" size="0.6096" layer="27">&gt;VALUE</text>
+<text x="0" y="0.27" size="0.6096" layer="25">&gt;NAME</text>
+</package>
+<package name="R0805_VISHAY_CRCW0805">
+<wire x1="-1" y1="0.6" x2="1" y2="0.6" width="0.05" layer="21"/>
+<wire x1="1" y1="0.6" x2="1" y2="-0.6" width="0.05" layer="21"/>
+<wire x1="1" y1="-0.6" x2="-1" y2="-0.6" width="0.05" layer="21"/>
+<wire x1="-1" y1="-0.6" x2="-1" y2="0.6" width="0.05" layer="21"/>
+<smd name="1" x="-0.775" y="0" dx="1.05" dy="1.3" layer="1"/>
+<smd name="2" x="0.775" y="0" dx="1.05" dy="1.3" layer="1"/>
+<text x="-0.77" y="0.27" size="0.6096" layer="27">&gt;VALUE</text>
+<text x="0" y="0.27" size="0.6096" layer="25">&gt;NAME</text>
+</package>
+<package name="R0603_PANASONIC_ERJ-3BW">
+<wire x1="-0.8" y1="0.4" x2="0.8" y2="0.4" width="0.127" layer="21"/>
+<wire x1="0.8" y1="0.4" x2="0.8" y2="-0.4" width="0.127" layer="21"/>
+<wire x1="0.8" y1="-0.4" x2="-0.8" y2="-0.4" width="0.127" layer="21"/>
+<wire x1="-0.8" y1="-0.4" x2="-0.8" y2="0.4" width="0.127" layer="21"/>
+<smd name="1" x="-0.8" y="0" dx="1" dy="1" layer="1"/>
+<smd name="2" x="0.8" y="0" dx="1" dy="1" layer="1"/>
+<text x="-0.5" y="0.7" size="0.4064" layer="27">&gt;VALUE</text>
+<text x="-0.8" y="1.1" size="0.4064" layer="25">&gt;NAME</text>
+</package>
+<package name="R2512_VISHAY_CRCW2512">
+<wire x1="3.15" y1="1.575" x2="-3.15" y2="1.575" width="0.127" layer="21"/>
+<wire x1="-3.15" y1="1.575" x2="-3.15" y2="-1.575" width="0.127" layer="21"/>
+<wire x1="-3.15" y1="-1.575" x2="3.15" y2="-1.575" width="0.127" layer="21"/>
+<wire x1="3.15" y1="-1.575" x2="3.15" y2="1.575" width="0.127" layer="21"/>
+<smd name="1" x="-3.1" y="0" dx="1" dy="3.2" layer="1"/>
+<smd name="2" x="3.1" y="0" dx="1" dy="3.2" layer="1"/>
+<text x="-2.5" y="2" size="0.6096" layer="25">&gt;NAME</text>
+<text x="0.5" y="2" size="0.6096" layer="27">&gt;VALUE</text>
+</package>
+<package name="R2010_STACKPOLE_RMCP2010">
+<smd name="1" x="-2.4" y="0" dx="1.3" dy="2.8" layer="1"/>
+<smd name="2" x="2.4" y="0" dx="1.3" dy="2.8" layer="1"/>
+<text x="-2.5" y="2" size="0.6096" layer="25">&gt;NAME</text>
+<text x="0.5" y="2" size="0.6096" layer="27">&gt;VALUE</text>
+<wire x1="-2.5" y1="1.25" x2="2.5" y2="1.25" width="0.127" layer="21"/>
+<wire x1="2.5" y1="1.25" x2="2.5" y2="-1.25" width="0.127" layer="21"/>
+<wire x1="2.5" y1="-1.25" x2="-2.5" y2="-1.25" width="0.127" layer="21"/>
+<wire x1="-2.5" y1="-1.25" x2="-2.5" y2="1.25" width="0.127" layer="21"/>
+</package>
 </packages>
 <symbols>
-<symbol name="CRCW0201100KFKED">
-<wire x1="-2.54" y1="-0.889" x2="2.54" y2="-0.889" width="0.254" layer="94"/>
-<wire x1="2.54" y1="0.889" x2="-2.54" y2="0.889" width="0.254" layer="94"/>
-<wire x1="2.54" y1="-0.889" x2="2.54" y2="0.889" width="0.254" layer="94"/>
-<wire x1="-2.54" y1="-0.889" x2="-2.54" y2="0.889" width="0.254" layer="94"/>
-<text x="-3.81" y="1.4986" size="1.27" layer="95" rot="R90">&gt;NAME</text>
-<text x="-2.413" y="1.27" size="1.143" layer="96" rot="R90">&gt;VALUE</text>
-<pin name="2" x="5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1" rot="R180"/>
-<pin name="1" x="-5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1"/>
-<text x="5.08" y="1.27" size="1.016" layer="95" rot="R90">&gt;NO_BOM</text>
-<text x="1.397" y="1.27" size="1.016" layer="96" rot="R90">&gt;TOLERANCE</text>
-<text x="2.667" y="1.27" size="1.016" layer="96" rot="R90">&gt;RATING</text>
-<text x="0.127" y="1.27" size="1.016" layer="96" rot="R90">&gt;PACKAGE</text>
-</symbol>
 <symbol name="CRCW020110K0FKED">
 <wire x1="-2.54" y1="-0.889" x2="2.54" y2="-0.889" width="0.254" layer="94"/>
 <wire x1="2.54" y1="0.889" x2="-2.54" y2="0.889" width="0.254" layer="94"/>
@@ -1735,7 +1801,7 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 <text x="2.667" y="1.27" size="1.016" layer="96" rot="R90">&gt;RATING</text>
 <text x="0.127" y="1.27" size="1.016" layer="96" rot="R90">&gt;PACKAGE</text>
 </symbol>
-<symbol name="CRCW02011M00FKED">
+<symbol name="CRCW04021M00FKED">
 <wire x1="-2.54" y1="-0.889" x2="2.54" y2="-0.889" width="0.254" layer="94"/>
 <wire x1="2.54" y1="0.889" x2="-2.54" y2="0.889" width="0.254" layer="94"/>
 <wire x1="2.54" y1="-0.889" x2="2.54" y2="0.889" width="0.254" layer="94"/>
@@ -1749,21 +1815,7 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 <text x="2.667" y="1.27" size="1.016" layer="96" rot="R90">&gt;RATING</text>
 <text x="0.127" y="1.27" size="1.016" layer="96" rot="R90">&gt;PACKAGE</text>
 </symbol>
-<symbol name="CRCW0402100KFKED">
-<wire x1="-2.54" y1="-0.889" x2="2.54" y2="-0.889" width="0.254" layer="94"/>
-<wire x1="2.54" y1="0.889" x2="-2.54" y2="0.889" width="0.254" layer="94"/>
-<wire x1="2.54" y1="-0.889" x2="2.54" y2="0.889" width="0.254" layer="94"/>
-<wire x1="-2.54" y1="-0.889" x2="-2.54" y2="0.889" width="0.254" layer="94"/>
-<text x="-3.81" y="1.4986" size="1.27" layer="95" rot="R90">&gt;NAME</text>
-<text x="-2.413" y="1.27" size="1.143" layer="96" rot="R90">&gt;VALUE</text>
-<pin name="2" x="5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1" rot="R180"/>
-<pin name="1" x="-5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1"/>
-<text x="5.08" y="1.27" size="1.016" layer="95" rot="R90">&gt;NO_BOM</text>
-<text x="1.397" y="1.27" size="1.016" layer="96" rot="R90">&gt;TOLERANCE</text>
-<text x="2.667" y="1.27" size="1.016" layer="96" rot="R90">&gt;RATING</text>
-<text x="0.127" y="1.27" size="1.016" layer="96" rot="R90">&gt;PACKAGE</text>
-</symbol>
-<symbol name="CRCW040210K0FKED">
+<symbol name="R-EU-1">
 <wire x1="-2.54" y1="-0.889" x2="2.54" y2="-0.889" width="0.254" layer="94"/>
 <wire x1="2.54" y1="0.889" x2="-2.54" y2="0.889" width="0.254" layer="94"/>
 <wire x1="2.54" y1="-0.889" x2="2.54" y2="0.889" width="0.254" layer="94"/>
@@ -1779,28 +1831,6 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="CRCW0201100KFKED" prefix="R">
-<gates>
-<gate name="G$1" symbol="CRCW0201100KFKED" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="R0201_VISHAY_CRCW0201">
-<connects>
-<connect gate="G$1" pin="1" pad="1"/>
-<connect gate="G$1" pin="2" pad="2"/>
-</connects>
-<technologies>
-<technology name="">
-<attribute name="NO_BOM" value="" constant="no"/>
-<attribute name="PACKAGE" value="0201" constant="no"/>
-<attribute name="RATING" value="1/20W" constant="no"/>
-<attribute name="TOLERANCE" value="1%" constant="no"/>
-<attribute name="VALUE" value="100k" constant="no"/>
-</technology>
-</technologies>
-</device>
-</devices>
-</deviceset>
 <deviceset name="CRCW020110K0FKED" prefix="R">
 <gates>
 <gate name="G$1" symbol="CRCW020110K0FKED" x="0" y="0"/>
@@ -1845,12 +1875,49 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 </device>
 </devices>
 </deviceset>
-<deviceset name="CRCW02011M00FKED" prefix="R">
+<deviceset name="CRCW04021M00FKED" prefix="R">
 <gates>
-<gate name="G$1" symbol="CRCW02011M00FKED" x="0" y="0"/>
+<gate name="G$1" symbol="CRCW04021M00FKED" x="0" y="0"/>
 </gates>
 <devices>
-<device name="" package="R0201_VISHAY_CRCW0201">
+<device name="" package="R0402_VISHAY_CRCW0402">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="0402" constant="no"/>
+<attribute name="RATING" value="1/16W" constant="no"/>
+<attribute name="TOLERANCE" value="1%" constant="no"/>
+<attribute name="VALUE" value="1M" constant="no"/>
+</technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="R-EU_" prefix="R" uservalue="yes">
+<description>&lt;B&gt;RESISTOR&lt;/B&gt;, European symbol</description>
+<gates>
+<gate name="G$1" symbol="R-EU-1" x="0" y="0"/>
+</gates>
+<devices>
+<device name="R0201_SEMCO_RC0603" package="R0201_SEMCO_RC0603">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="0201" constant="no"/>
+<attribute name="RATING" value="1/10W" constant="no"/>
+<attribute name="TOLERANCE" value="1%" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="R0201_VISHAY_CRCW0201" package="R0201_VISHAY_CRCW0201">
 <connects>
 <connect gate="G$1" pin="1" pad="1"/>
 <connect gate="G$1" pin="2" pad="2"/>
@@ -1861,18 +1928,24 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 <attribute name="PACKAGE" value="0201" constant="no"/>
 <attribute name="RATING" value="1/20W" constant="no"/>
 <attribute name="TOLERANCE" value="1%" constant="no"/>
-<attribute name="VALUE" value="1M" constant="no"/>
 </technology>
 </technologies>
 </device>
-</devices>
-</deviceset>
-<deviceset name="CRCW0402100KFKED" prefix="R">
-<gates>
-<gate name="G$1" symbol="CRCW0402100KFKED" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="R0402_VISHAY_CRCW0402">
+<device name="R0402_STACKPOLE_HCJ0402" package="R0402_STACKPOLE_HCJ0402">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="0402" constant="no"/>
+<attribute name="RATING" value="1/8W" constant="no"/>
+<attribute name="TOLERANCE" value="" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="R0402_VISHAY_CRCW0402" package="R0402_VISHAY_CRCW0402">
 <connects>
 <connect gate="G$1" pin="1" pad="1"/>
 <connect gate="G$1" pin="2" pad="2"/>
@@ -1883,18 +1956,10 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 <attribute name="PACKAGE" value="0402" constant="no"/>
 <attribute name="RATING" value="1/16W" constant="no"/>
 <attribute name="TOLERANCE" value="1%" constant="no"/>
-<attribute name="VALUE" value="100k" constant="no"/>
 </technology>
 </technologies>
 </device>
-</devices>
-</deviceset>
-<deviceset name="CRCW040210K0FKED" prefix="R">
-<gates>
-<gate name="G$1" symbol="CRCW040210K0FKED" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="R0402_VISHAY_CRCW0402">
+<device name="R0402_VISHAY_CRCW0402-HP" package="R0402_VISHAY_CRCW0402-HP">
 <connects>
 <connect gate="G$1" pin="1" pad="1"/>
 <connect gate="G$1" pin="2" pad="2"/>
@@ -1903,9 +1968,78 @@ This is the "KIT" version, which has limited top masking for improved ease of as
 <technology name="">
 <attribute name="NO_BOM" value="" constant="no"/>
 <attribute name="PACKAGE" value="0402" constant="no"/>
-<attribute name="RATING" value="1/16W" constant="no"/>
+<attribute name="RATING" value="1/5W" constant="no"/>
 <attribute name="TOLERANCE" value="1%" constant="no"/>
-<attribute name="VALUE" value="10k" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="R0603_VISHAY_MCT0603" package="R0603_VISHAY_MCT0603">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="0603" constant="no"/>
+<attribute name="RATING" value="1/8W" constant="no"/>
+<attribute name="TOLERANCE" value="" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="R0805_VISHAY_CRCW0805" package="R0805_VISHAY_CRCW0805">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="0805" constant="no"/>
+<attribute name="RATING" value="1/8W" constant="no"/>
+<attribute name="TOLERANCE" value="1%" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="R0603_PANASONIC_ERJ-3BW" package="R0603_PANASONIC_ERJ-3BW">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="0603" constant="no"/>
+<attribute name="RATING" value="0.33W" constant="no"/>
+<attribute name="TOLERANCE" value="1%" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="R2512_VISHAY_CRCW2512" package="R2512_VISHAY_CRCW2512">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="2512" constant="no"/>
+<attribute name="RATING" value="1W" constant="no"/>
+<attribute name="TOLERANCE" value="1%" constant="no"/>
+</technology>
+</technologies>
+</device>
+<device name="R2010_STACKPOLE_RMCP2010" package="R2010_STACKPOLE_RMCP2010">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="NO_BOM" value="" constant="no"/>
+<attribute name="PACKAGE" value="2010" constant="no"/>
+<attribute name="RATING" value="1W" constant="no"/>
+<attribute name="TOLERANCE" value="5%" constant="no"/>
 </technology>
 </technologies>
 </device>
@@ -3627,7 +3761,6 @@ Details see:
 <part name="C1" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="4.7uF"/>
 <part name="+3V32" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
 <part name="GND3" library="tinycircuits" deviceset="GND" device=""/>
-<part name="R2" library="RESISTOR" deviceset="CRCW0201100KFKED" device="" value="100k"/>
 <part name="R3" library="RESISTOR" deviceset="CRCW020110K0FKED" device="" value="10k"/>
 <part name="GND4" library="tinycircuits" deviceset="GND" device=""/>
 <part name="P+4" library="tinycircuits" deviceset="VBATT" device=""/>
@@ -3650,12 +3783,11 @@ Details see:
 <part name="+3V35" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
 <part name="GND11" library="tinycircuits" deviceset="GND" device=""/>
 <part name="GND18" library="tinycircuits" deviceset="GND" device=""/>
-<part name="U3" library="MAX1921-1.8" deviceset="MAX1921EUT18+T" device=""/>
+<part name="U3" library="MAX1921-1.8" deviceset="MAX1921EUT18+T" device="" value="MAX1921EUT18+"/>
 <part name="+3V36" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
 <part name="C10" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="4.7uF"/>
 <part name="GND15" library="tinycircuits" deviceset="GND" device=""/>
-<part name="L1" library="INDUCTOR" deviceset="L-EU" device="L0402_MURATA_LQP15_LQG15" value="4.7uH"/>
-<part name="C9" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="5600pF"/>
+<part name="C9" library="CAPACITOR" deviceset="C-EU" device="C0603_MURATA_GRM18" value="5600pF"/>
 <part name="GND16" library="tinycircuits" deviceset="GND" device=""/>
 <part name="C14" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="4.7uF"/>
 <part name="GND17" library="tinycircuits" deviceset="GND" device=""/>
@@ -3670,7 +3802,7 @@ Details see:
 <part name="U8" library="SparkFun-Sensors" deviceset="MPU-9250" device="" value="MPU-9250"/>
 <part name="GND28" library="tinycircuits" deviceset="GND" device=""/>
 <part name="GND30" library="tinycircuits" deviceset="GND" device=""/>
-<part name="C21" library="CAPACITOR" deviceset="C-EU" device="C0201_MURATA_GRM03" value="0.1uF"/>
+<part name="C21" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="0.1uF"/>
 <part name="C20" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="0.1uF"/>
 <part name="+3V313" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
 <part name="+3V312" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
@@ -3683,7 +3815,7 @@ Details see:
 <part name="GND33" library="tinycircuits" deviceset="GND" device=""/>
 <part name="C22" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="10uF"/>
 <part name="+3V316" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
-<part name="U6" library="MAX14595ETAT" deviceset="MAX14595ETAT" device=""/>
+<part name="U6" library="MAX14595ETAT" deviceset="MAX14595ETAT" device="" value="MAX14595ETA+"/>
 <part name="+3V38" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
 <part name="P+6" library="tinycircuits" deviceset="VCC" device="" value="1V8"/>
 <part name="R8" library="RESISTOR" deviceset="CRCW02014K70FKED" device="" value="4.7k"/>
@@ -3701,31 +3833,33 @@ Details see:
 <part name="P+7" library="tinycircuits" deviceset="VCC" device="" value="1V8"/>
 <part name="GND21" library="tinycircuits" deviceset="GND" device=""/>
 <part name="P+9" library="tinycircuits" deviceset="VCC" device="" value="1V8"/>
-<part name="C18" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="1uF"/>
+<part name="C18" library="CAPACITOR" deviceset="C-EU" device="C0603_MURATA_GRM18" value="1.0uF"/>
 <part name="GND22" library="tinycircuits" deviceset="GND" device=""/>
 <part name="GND23" library="tinycircuits" deviceset="GND" device=""/>
-<part name="C15" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="1uF"/>
+<part name="C15" library="CAPACITOR" deviceset="C-EU" device="C0603_MURATA_GRM18" value="1.0uF"/>
 <part name="+3V311" library="tinycircuits" deviceset="+3V3" device="" value="3V3"/>
 <part name="FRAME1" library="SparkFun-Aesthetics" deviceset="FRAME-A4L" device=""/>
 <part name="U1" library="SparkFun-IC-Power" deviceset="V_REG_AP2112" device="K-3.3V" value="AP2112K-3.3V"/>
-<part name="C3" library="CAPACITOR" deviceset="C-EU" device="C0201_MURATA_GRM03" value="0.1uF"/>
-<part name="C4" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="1.0uF"/>
+<part name="C3" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="0.1uF"/>
+<part name="C4" library="CAPACITOR" deviceset="C-EU" device="C0603_MURATA_GRM18" value="1.0uF"/>
 <part name="C5" library="CAPACITOR" deviceset="C-EU" device="C0402_MURATA_GRM15-GJM15" value="2.2uF"/>
 <part name="GND7" library="tinycircuits" deviceset="GND" device=""/>
 <part name="GND8" library="tinycircuits" deviceset="GND" device=""/>
 <part name="GND9" library="tinycircuits" deviceset="GND" device=""/>
-<part name="R1" library="RESISTOR" deviceset="CRCW02011M00FKED" device="" value="10M"/>
-<part name="R4" library="RESISTOR" deviceset="CRCW02011M00FKED" device="" value="10M"/>
 <part name="GND10" library="tinycircuits" deviceset="GND" device=""/>
 <part name="Q1" library="tinycircuits" deviceset="AS-ITM-00024" device="" value="DMP2035U"/>
 <part name="D1" library="tinycircuits" deviceset="AS-ITM-00111" device="" value="MBR120"/>
 <part name="GND5" library="tinycircuits" deviceset="GND" device=""/>
 <part name="GND31" library="tinycircuits" deviceset="GND" device=""/>
-<part name="R5" library="RESISTOR" deviceset="CRCW0402100KFKED" device="" value="100k"/>
-<part name="R7" library="RESISTOR" deviceset="CRCW040210K0FKED" device="" value="4.75k"/>
-<part name="R12" library="RESISTOR" deviceset="CRCW0402100KFKED" device="" value="100k"/>
 <part name="J3" library="Board-to-Board (rev18a)" deviceset="610X08243021" device=""/>
 <part name="R6" library="RESISTOR" deviceset="CRCW020110K0FKED" device="" value="10k"/>
+<part name="R4" library="RESISTOR" deviceset="CRCW04021M00FKED" device="" value="10M"/>
+<part name="R1" library="RESISTOR" deviceset="CRCW04021M00FKED" device="" value="10M"/>
+<part name="L1" library="INDUCTOR" deviceset="L-EU" device="L0805_TDK_MLZ" value="4.7uH"/>
+<part name="R2" library="RESISTOR" deviceset="R-EU_" device="R0603_VISHAY_MCT0603" value="100k"/>
+<part name="R5" library="RESISTOR" deviceset="R-EU_" device="R0603_VISHAY_MCT0603" value="100k"/>
+<part name="R12" library="RESISTOR" deviceset="R-EU_" device="R0603_VISHAY_MCT0603" value="100k"/>
+<part name="R7" library="RESISTOR" deviceset="R-EU_" device="R0402_VISHAY_CRCW0402" value="4.75k"/>
 </parts>
 <sheets>
 <sheet>
@@ -3739,7 +3873,7 @@ Details see:
 <text x="93.98" y="119.38" size="1.778" layer="97">STAT is an open-drain collector</text>
 <text x="93.98" y="116.84" size="1.778" layer="97">R3 determines charging rate (100 mA)</text>
 <text x="198.12" y="119.38" size="1.778" layer="97">D1 and Q1 allow for quick switching between USB and battery input</text>
-<text x="246" y="7" size="1.778" layer="97">DANIEL DE SOUSA</text>
+<text x="244.984" y="6.492" size="2.1844" layer="97">DANIEL DE SOUSA</text>
 <text x="198.12" y="116.84" size="1.778" layer="97">Q1 exhibits a voltage drop of 3mV</text>
 </plain>
 <instances>
@@ -3768,7 +3902,6 @@ Details see:
 <attribute name="VALUE" x="76.2" y="165.1" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="GND3" gate="1" x="58.42" y="132.08"/>
-<instance part="R2" gate="G$1" x="73.66" y="147.32" rot="R90"/>
 <instance part="R3" gate="G$1" x="114.3" y="147.32" smashed="yes">
 <attribute name="NAME" x="112.8014" y="145.67" size="1.27" layer="95" rot="R180"/>
 <attribute name="VALUE" x="113.03" y="143.987" size="1.143" layer="96" rot="R180"/>
@@ -3844,7 +3977,6 @@ Details see:
 </instance>
 <instance part="C10" gate="G$1" x="167.64" y="66.04"/>
 <instance part="GND15" gate="1" x="167.64" y="45.72"/>
-<instance part="L1" gate="G$1" x="231.14" y="58.42" rot="R90"/>
 <instance part="C9" gate="G$1" x="238.76" y="68.58"/>
 <instance part="GND16" gate="1" x="213.36" y="45.72"/>
 <instance part="C14" gate="G$1" x="248.92" y="53.34"/>
@@ -3860,22 +3992,6 @@ Details see:
 <instance part="GND7" gate="1" x="208.28" y="127"/>
 <instance part="GND8" gate="1" x="220.98" y="127"/>
 <instance part="GND9" gate="1" x="233.68" y="127"/>
-<instance part="R1" gate="G$1" x="198.12" y="149.86" smashed="yes" rot="R90">
-<attribute name="NAME" x="196.1214" y="147.65" size="1.27" layer="95" rot="R180"/>
-<attribute name="VALUE" x="196.05" y="148.947" size="1.143" layer="96" rot="R180"/>
-<attribute name="NO_BOM" x="196.85" y="154.94" size="1.016" layer="95" rot="R180"/>
-<attribute name="TOLERANCE" x="196.15" y="151.457" size="1.016" layer="96" rot="R180"/>
-<attribute name="RATING" x="196.15" y="152.727" size="1.016" layer="96" rot="R180"/>
-<attribute name="PACKAGE" x="196.15" y="150.187" size="1.016" layer="96" rot="R180"/>
-</instance>
-<instance part="R4" gate="G$1" x="198.12" y="139.7" smashed="yes" rot="R90">
-<attribute name="NAME" x="196.3214" y="137.29" size="1.27" layer="95" rot="R180"/>
-<attribute name="VALUE" x="196.05" y="138.687" size="1.143" layer="96" rot="R180"/>
-<attribute name="NO_BOM" x="196.85" y="144.78" size="1.016" layer="95" rot="R180"/>
-<attribute name="TOLERANCE" x="195.95" y="141.297" size="1.016" layer="96" rot="R180"/>
-<attribute name="RATING" x="195.95" y="142.567" size="1.016" layer="96" rot="R180"/>
-<attribute name="PACKAGE" x="195.95" y="140.027" size="1.016" layer="96" rot="R180"/>
-</instance>
 <instance part="GND10" gate="1" x="261.62" y="127"/>
 <instance part="Q1" gate="G$1" x="167.64" y="149.86" smashed="yes" rot="R90">
 <attribute name="VALUE" x="169.71" y="148.32" size="1.778" layer="96" rot="R180"/>
@@ -3886,16 +4002,20 @@ Details see:
 <attribute name="VALUE" x="188.48" y="154.0714" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="GND5" gate="1" x="154.94" y="127"/>
-<instance part="R5" gate="G$1" x="154.94" y="134.62" smashed="yes" rot="R270">
-<attribute name="NAME" x="150.0886" y="134.112" size="1.27" layer="95"/>
-<attribute name="VALUE" x="150.114" y="132.461" size="1.143" layer="96"/>
-<attribute name="NO_BOM" x="156.21" y="129.54" size="1.016" layer="95"/>
-<attribute name="TOLERANCE" x="156.21" y="133.223" size="1.016" layer="96"/>
-<attribute name="RATING" x="156.21" y="131.953" size="1.016" layer="96"/>
-<attribute name="PACKAGE" x="156.21" y="134.493" size="1.016" layer="96"/>
-</instance>
-<instance part="R7" gate="G$1" x="223.52" y="66.04" rot="R90"/>
 <instance part="R6" gate="G$1" x="35.56" y="93.98" rot="R270"/>
+<instance part="R4" gate="G$1" x="198.12" y="139.7" rot="R90"/>
+<instance part="R1" gate="G$1" x="198.12" y="149.86" smashed="yes" rot="R90">
+<attribute name="NAME" x="196.3674" y="146.812" size="1.27" layer="95" rot="R180"/>
+<attribute name="VALUE" x="196.342" y="148.463" size="1.143" layer="96" rot="R180"/>
+<attribute name="NO_BOM" x="196.85" y="154.94" size="1.016" layer="95" rot="R180"/>
+<attribute name="TOLERANCE" x="196.342" y="152.019" size="1.016" layer="96" rot="R180"/>
+<attribute name="RATING" x="196.596" y="153.543" size="1.016" layer="96" rot="R180"/>
+<attribute name="PACKAGE" x="196.342" y="150.495" size="1.016" layer="96" rot="R180"/>
+</instance>
+<instance part="L1" gate="G$1" x="231.14" y="58.42" rot="R90"/>
+<instance part="R2" gate="G$1" x="73.66" y="147.32" rot="R90"/>
+<instance part="R5" gate="G$1" x="154.94" y="134.62" rot="R90"/>
+<instance part="R7" gate="G$1" x="223.52" y="66.04" rot="R90"/>
 </instances>
 <busses>
 </busses>
@@ -4027,8 +4147,8 @@ Details see:
 </segment>
 <segment>
 <pinref part="GND6" gate="1" pin="GND"/>
-<pinref part="R4" gate="G$1" pin="1"/>
 <wire x1="198.12" y1="134.62" x2="198.12" y2="129.54" width="0.1524" layer="91"/>
+<pinref part="R4" gate="G$1" pin="1"/>
 </segment>
 <segment>
 <pinref part="C5" gate="G$1" pin="2"/>
@@ -4037,7 +4157,7 @@ Details see:
 </segment>
 <segment>
 <pinref part="GND5" gate="1" pin="GND"/>
-<pinref part="R5" gate="G$1" pin="2"/>
+<pinref part="R5" gate="G$1" pin="1"/>
 </segment>
 </net>
 <net name="VUSB" class="0">
@@ -4064,15 +4184,15 @@ Details see:
 <wire x1="177.8" y1="144.78" x2="177.8" y2="139.7" width="0.1524" layer="91"/>
 <wire x1="177.8" y1="139.7" x2="170.18" y2="139.7" width="0.1524" layer="91"/>
 <junction x="170.18" y="139.7"/>
-<pinref part="R5" gate="G$1" pin="1"/>
+<pinref part="R5" gate="G$1" pin="2"/>
 <junction x="154.94" y="139.7"/>
 </segment>
 </net>
 <net name="3V3" class="0">
 <segment>
-<pinref part="R2" gate="G$1" pin="2"/>
 <pinref part="+3V32" gate="G$1" pin="+3V3"/>
 <wire x1="73.66" y1="152.4" x2="73.66" y2="160.02" width="0.1524" layer="91"/>
+<pinref part="R2" gate="G$1" pin="2"/>
 </segment>
 <segment>
 <pinref part="+3V35" gate="G$1" pin="+3V3"/>
@@ -4134,13 +4254,13 @@ Details see:
 </net>
 <net name="D3_CC" class="0">
 <segment>
-<pinref part="R2" gate="G$1" pin="1"/>
 <wire x1="73.66" y1="142.24" x2="73.66" y2="139.7" width="0.1524" layer="91"/>
 <pinref part="U2" gate="G$1" pin="STAT"/>
 <wire x1="73.66" y1="139.7" x2="81.28" y2="139.7" width="0.1524" layer="91"/>
 <wire x1="73.66" y1="139.7" x2="73.66" y2="137.16" width="0.1524" layer="91"/>
 <junction x="73.66" y="139.7"/>
 <label x="79.3" y="135.54" size="1.778" layer="95" rot="R180" xref="yes"/>
+<pinref part="R2" gate="G$1" pin="1"/>
 </segment>
 <segment>
 <pinref part="U4" gate="G$1" pin="PA09(I2C/AIN17/SER0:1+)"/>
@@ -4199,13 +4319,13 @@ Details see:
 <net name="A0_PM" class="0">
 <segment>
 <label x="181.92" y="143.78" size="1.778" layer="95"/>
+<pinref part="C3" gate="G$1" pin="1"/>
+<wire x1="208.28" y1="142.24" x2="208.28" y2="144.78" width="0.1524" layer="91"/>
+<wire x1="208.28" y1="144.78" x2="198.12" y2="144.78" width="0.1524" layer="91"/>
 <pinref part="R4" gate="G$1" pin="2"/>
 <wire x1="198.12" y1="144.78" x2="190.5" y2="144.78" width="0.1524" layer="91"/>
 <junction x="198.12" y="144.78"/>
 <pinref part="R1" gate="G$1" pin="1"/>
-<pinref part="C3" gate="G$1" pin="1"/>
-<wire x1="208.28" y1="142.24" x2="208.28" y2="144.78" width="0.1524" layer="91"/>
-<wire x1="208.28" y1="144.78" x2="198.12" y2="144.78" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="U4" gate="G$1" pin="PA02(AIN0/DAC)"/>
@@ -4335,10 +4455,10 @@ Details see:
 <wire x1="175.26" y1="66.04" x2="175.26" y2="50.8" width="0.1524" layer="91"/>
 <wire x1="175.26" y1="50.8" x2="223.52" y2="50.8" width="0.1524" layer="91"/>
 <wire x1="223.52" y1="60.96" x2="223.52" y2="58.42" width="0.1524" layer="91"/>
-<pinref part="L1" gate="G$1" pin="1"/>
 <wire x1="223.52" y1="58.42" x2="223.52" y2="50.8" width="0.1524" layer="91"/>
 <wire x1="223.52" y1="58.42" x2="226.06" y2="58.42" width="0.1524" layer="91"/>
 <junction x="223.52" y="58.42"/>
+<pinref part="L1" gate="G$1" pin="1"/>
 <pinref part="R7" gate="G$1" pin="1"/>
 </segment>
 </net>
@@ -4360,27 +4480,25 @@ Details see:
 <pinref part="C14" gate="G$1" pin="1"/>
 <wire x1="248.92" y1="78.74" x2="248.92" y2="58.42" width="0.1524" layer="91"/>
 <pinref part="C9" gate="G$1" pin="2"/>
-<pinref part="L1" gate="G$1" pin="2"/>
 <wire x1="248.92" y1="58.42" x2="248.92" y2="55.88" width="0.1524" layer="91"/>
 <wire x1="238.76" y1="63.5" x2="238.76" y2="58.42" width="0.1524" layer="91"/>
 <wire x1="238.76" y1="58.42" x2="236.22" y2="58.42" width="0.1524" layer="91"/>
 <wire x1="238.76" y1="58.42" x2="248.92" y2="58.42" width="0.1524" layer="91"/>
 <junction x="238.76" y="58.42"/>
 <junction x="248.92" y="58.42"/>
+<pinref part="L1" gate="G$1" pin="2"/>
 </segment>
 </net>
 <net name="N$1" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="IN"/>
-<pinref part="R1" gate="G$1" pin="2"/>
 <pinref part="U1" gate="G$1" pin="EN"/>
 <wire x1="233.68" y1="154.94" x2="220.98" y2="154.94" width="0.1524" layer="91"/>
 <wire x1="220.98" y1="154.94" x2="198.12" y2="154.94" width="0.1524" layer="91"/>
+<wire x1="198.12" y1="154.94" x2="177.8" y2="154.94" width="0.1524" layer="91"/>
 <wire x1="233.68" y1="149.86" x2="233.68" y2="154.94" width="0.1524" layer="91"/>
 <junction x="233.68" y="154.94"/>
 <pinref part="Q1" gate="G$1" pin="S"/>
-<wire x1="198.12" y1="154.94" x2="177.8" y2="154.94" width="0.1524" layer="91"/>
-<junction x="198.12" y="154.94"/>
 <pinref part="D1" gate="G$1" pin="C"/>
 <wire x1="177.8" y1="154.94" x2="170.18" y2="154.94" width="0.1524" layer="91"/>
 <wire x1="177.8" y1="149.86" x2="177.8" y2="154.94" width="0.1524" layer="91"/>
@@ -4388,6 +4506,8 @@ Details see:
 <pinref part="C4" gate="G$1" pin="1"/>
 <wire x1="220.98" y1="142.24" x2="220.98" y2="154.94" width="0.1524" layer="91"/>
 <junction x="220.98" y="154.94"/>
+<pinref part="R1" gate="G$1" pin="2"/>
+<junction x="198.12" y="154.94"/>
 </segment>
 </net>
 </nets>
@@ -4407,7 +4527,7 @@ Details see:
 <text x="233.68" y="109.22" size="1.778" layer="97">MAX1459 - level shifter</text>
 <text x="210.82" y="66.04" size="1.778" layer="97">WP has internal pull-down</text>
 <text x="210.82" y="63.5" size="1.778" layer="97">A2:0 can be used to select multiple I2C addresses</text>
-<text x="246.5" y="7" size="1.778" layer="97">DANIEL DE SOUSA</text>
+<text x="244.976" y="6.492" size="2.1844" layer="97">DANIEL DE SOUSA</text>
 <text x="2.54" y="111.76" size="1.778" layer="97">R8, R9, R10, and R11 are optinally populated</text>
 <text x="2.54" y="109.22" size="1.778" layer="97">MAX14595 has internal I2C pullups of 7.6K</text>
 <text x="139.7" y="53.34" size="1.778" layer="97">OLED has internal 10K I2C pullups</text>
@@ -4505,8 +4625,8 @@ Details see:
 <attribute name="VALUE" x="226.06" y="167.64" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="GND31" gate="1" x="205.74" y="30.48"/>
-<instance part="R12" gate="G$1" x="48.26" y="35.56" rot="R90"/>
 <instance part="J3" gate="G$1" x="215.9" y="43.18"/>
+<instance part="R12" gate="G$1" x="48.26" y="35.56" rot="R90"/>
 </instances>
 <busses>
 </busses>
