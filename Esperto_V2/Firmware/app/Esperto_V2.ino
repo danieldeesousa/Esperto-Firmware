@@ -44,6 +44,7 @@ int stepCount = 0; // total number of steps taken
 double stepMax = 0; // peak of gyration data
 double stepMin = 0; // trough of gyration data
 double gyroData[3]; // array storing recent gyration readings
+uint16_t dmpStepCount = 0;
 
 // Heart Rate Variables
 MAX30105 heartRateSensor; // instance of MAX30105 class
@@ -157,7 +158,7 @@ void updateDisplay()
 
     // display steps
     u8g2.setCursor(78, 62);
-    u8g2.print(String(stepCount*2) + " stp");
+    u8g2.print(String((stepCount + dmpStepCount)*2) + " stp");
     u8g2.drawXBMP(64, 54, 10, 10, mountain);
     
     // Display time
@@ -275,7 +276,7 @@ void countSteps()
   
   float magGyration = sqrt(sq(gyroX) + sq(gyroY) + sq(gyroZ));
   float i = iirFilter((int) magGyration);
-  
+
   // update recent quaternion values
   gyroData[0] = gyroData[1];
   gyroData[1] = gyroData[2];
@@ -401,6 +402,7 @@ void loop()
     if ( imu.dmpUpdateFifo() == INV_SUCCESS)
     {
         countSteps();
+        dmpStepCount = imu.dmpGetPedometerSteps();
     }
   }
   
@@ -586,7 +588,10 @@ void init_MPU9250()
   unsigned short dmpFeatureMask = 0;
   dmpFeatureMask |= DMP_FEATURE_GYRO_CAL;
   dmpFeatureMask |= DMP_FEATURE_SEND_CAL_GYRO;
+  dmpFeatureMask |= DMP_FEATURE_PEDOMETER;
   imu.dmpBegin(dmpFeatureMask);
+  imu.dmpSetPedometerSteps(0);
+  imu.dmpSetPedometerTime(0);
 }
 
 float iirFilter(int flexVal)
@@ -637,4 +642,3 @@ int freeRam ()
   char stack_dummy = 0;
   return &stack_dummy - sbrk(0);
 }
-
