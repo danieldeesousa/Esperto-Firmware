@@ -1,13 +1,13 @@
 #include <U8g2lib.h>
 #include <SparkFunMPU9250-DMP.h>
-#include <RTCZero.h>
+#include "esperto.h"
+#include "esperto_rtc.h"
+#include "esperto_fram.h"
+#include "esperto_timer.h"
 #include "MAX30105.h"
 #include "heartRate.h"
-#include "Adafruit_FRAM_I2C.h"
-#include "avdweb_SAMDtimer.h"
 #include <SPI.h>
 #include <STBLE.h>
-#include "esperto.h"
 
 extern "C" char *sbrk(int i);
 
@@ -15,7 +15,7 @@ extern "C" char *sbrk(int i);
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
 
 // Define FRAM
-Adafruit_FRAM_I2C FRAM = Adafruit_FRAM_I2C();
+Esperto_FRAM FRAM = Esperto_FRAM();
 
 // BLE variables
 #define NOTIF_COUNTER_MAX 10 // how many seconds notification appears on screen for
@@ -33,7 +33,7 @@ uint16_t connection_handle = 0;
 uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 
 // Real Time Clock Variables
-RTCZero rtc; // instance of RTCZero class
+Esperto_RTC rtc; // instance of RTC class
 bool deviceInit = 0; // prevents time showing up without initial BLE connection
 
 // MPU9250
@@ -106,9 +106,6 @@ void setup()
   
   // Initialize STPBTLE-RF
   BLEsetup();
-
-  // Initialize 1Hz timer interrupt
-  timer3_1Hz.attachInterrupt(ISR_timer3);
 }
 
 // Function to update the display with latest information
@@ -642,3 +639,4 @@ int freeRam ()
   char stack_dummy = 0;
   return &stack_dummy - sbrk(0);
 }
+

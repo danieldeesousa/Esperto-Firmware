@@ -2,35 +2,38 @@
   ******************************************************************************
   * @file    esperto_timer.h
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    16-July-2018
+  * @version V2.0.1
+  * @date    17-July-2018
   * @brief   This library was developed for use with SAM D21 internal timers
   ******************************************************************************
 */
   
-#ifndef SAMDtimer_H
-#define SAMDtimer_H
+#ifndef esperto_timer_H
+#define esperto_timer_H
 
-#include <Adafruit_ZeroTimer.h>
+#include "Arduino.h"
+#include "samd21/include/samd21g18a.h"
+#include "tc.h"
+#include "tc_interrupt.h"
 
-class SAMDtimer : public Adafruit_ZeroTimer 
-{ public:
-    SAMDtimer(byte timerNr, tc_counter_size countersize, byte pin, unsigned period_us, int pulseWidth_us=-1, bool timerEnable=1); // For timer with output
-    SAMDtimer(byte timerNr, tc_callback_t _ISR, unsigned period_us, bool ISRenable=1); // For timer interrupt, without output 
-    
-    void attachInterrupt(tc_callback_t _ISR, bool interruptEnable=1); // attach ISR to a timer with output, or exchange the ISR
-    void enableTimer(bool timerEnable);
-    void enableInterrupt(bool interruptEnable);
-    void setPulseWidth(unsigned pulseWidth_us);
+class SAMDtimer { 
+public:
+    SAMDtimer(byte timerNr, tc_callback_t _ISR, unsigned period_us, bool ISRenable=1);
     
   protected:  
-    void init(bool enabled); 
+    void init(); 
     void calc(unsigned period_us, unsigned pulseWidth_us);  
-
-    byte pin;
-    tc_callback_t ISR;
-    unsigned period_us, periodCounter, PWcounter;
+	
+	void configure(tc_clock_prescaler prescale, tc_counter_size countersize, tc_wave_generation wavegen, tc_count_direction countdir = TC_COUNT_DIRECTION_UP);
+	void setPeriodMatch(uint32_t period, uint32_t match);
+	void setCompare(uint8_t channum, uint32_t compare);
+	
+    unsigned periodCounter, PWcounter;
     tc_clock_prescaler prescale;
     tc_counter_size countersize;  
+	
+    uint8_t _timernum;
+    struct tc_config config_tc;
+    struct tc_module tc_instance;
 };
 #endif

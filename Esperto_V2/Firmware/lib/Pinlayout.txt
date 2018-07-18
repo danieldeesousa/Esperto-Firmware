@@ -1,7 +1,0 @@
-I2C Addresses:
-FRAM		0x50
-MPU9250		0x68
-MAX30105	0x57
-OLED		0x3C
-
-Pin layout
