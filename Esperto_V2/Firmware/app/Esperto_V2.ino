@@ -1,13 +1,12 @@
 #include <U8g2lib.h>
-#include <SparkFunMPU9250-DMP.h>
+#include "SparkFunMPU9250-DMP.h"
 #include "esperto.h"
 #include "esperto_rtc.h"
 #include "esperto_fram.h"
 #include "esperto_timer.h"
+#include "esperto_stble.h"
 #include "MAX30105.h"
 #include "heartRate.h"
-#include <SPI.h>
-#include <STBLE.h>
 
 extern "C" char *sbrk(int i);
 
