@@ -10,13 +10,13 @@
 
 #include "esperto_fram.h"
 
-// FRAM Constructor
+/* FRAM Constructor */
 Esperto_FRAM::Esperto_FRAM(void) 
 {
   _framInitialised = false;
 }
 
-// Initializes I2C and configures the FRAM
+/* Initializes I2C and configures the FRAM */
 boolean Esperto_FRAM::begin(uint8_t addr) 
 {
   // Start I2C bus
@@ -42,7 +42,7 @@ boolean Esperto_FRAM::begin(uint8_t addr)
 }
 
 
-// Writes a byte to the specific FRAM address
+/* Writes a byte to the specific FRAM address */
 void Esperto_FRAM::write8 (uint16_t framAddr, uint8_t value)
 {
   Wire.beginTransmission(i2c_addr);
@@ -52,7 +52,7 @@ void Esperto_FRAM::write8 (uint16_t framAddr, uint8_t value)
   Wire.endTransmission();
 }
 
-// Reads a byte value from the specified FRAM address
+/* Reads a byte value from the specified FRAM address */
 uint8_t Esperto_FRAM::read8 (uint16_t framAddr)
 {
   Wire.beginTransmission(i2c_addr);
@@ -64,7 +64,7 @@ uint8_t Esperto_FRAM::read8 (uint16_t framAddr)
   return Wire.read();
 }
 
-// Reads the Manufacturer ID and the Product ID frm the IC
+/* Reads the Manufacturer ID and the Product ID frm the IC */
 void Esperto_FRAM::getDeviceID(uint16_t *manufacturerID, uint16_t *productID)
 {
   uint8_t a[3] = { 0, 0, 0 };

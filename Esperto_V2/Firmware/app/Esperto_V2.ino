@@ -1,12 +1,11 @@
 #include <U8g2lib.h>
-#include "SparkFunMPU9250-DMP.h"
+#include "esperto_mpu9250.h"
 #include "esperto.h"
 #include "esperto_rtc.h"
 #include "esperto_fram.h"
 #include "esperto_timer.h"
 #include "esperto_stble.h"
-#include "MAX30105.h"
-#include "heartRate.h"
+#include "esperto_max30102.h"
 
 extern "C" char *sbrk(int i);
 
@@ -46,7 +45,7 @@ double gyroData[3]; // array storing recent gyration readings
 uint16_t dmpStepCount = 0;
 
 // Heart Rate Variables
-MAX30105 heartRateSensor; // instance of MAX30105 class
+MAX30102 heartRateSensor; // instance of MAX30102 class
 const byte arraySizeHR = 5; // size of array containing latest HR values
 byte heartRates[arraySizeHR]; // array containing latest HR values
 byte heartRateIndex = 0; // index latest value was inputted into array
@@ -154,7 +153,7 @@ void updateDisplay()
 
     // display steps
     u8g2.setCursor(78, 62);
-    u8g2.print(String((stepCount + dmpStepCount)*2) + " stp");
+    u8g2.print(String((stepCount + dmpStepCount)) + " stp");
     u8g2.drawXBMP(64, 54, 10, 10, mountain);
     
     // Display time
@@ -235,8 +234,8 @@ void writeFRAM()
   if(countFRAM < 32768)
   {
      FRAM.write8(countFRAM, heartRateAvg);
-     FRAM.write8(countFRAM+1, stepCount >> 8);
-     FRAM.write8(countFRAM+2, stepCount);
+     FRAM.write8(countFRAM+1, (stepCount + dmpStepCount) >> 8);
+     FRAM.write8(countFRAM+2, (stepCount + dmpStepCount));
      FRAM.write8(countFRAM+3, 0);
      countFRAM+=4; // 4 byte alligned 
   }
@@ -286,7 +285,7 @@ void countSteps()
     // if a step is detected
     if (maxMinDiff > stepDiffMinThreshold)
     {
-        stepCount++;
+        stepCount+=2; // increase by 2 as 2 steps were detected
     }
   }
   // if a trough/min is found - 100 compared to reduce high freq noise
@@ -418,11 +417,10 @@ void loop()
   // Write to BLE every 30 seconds
   else if(ISR_CTR >= 30 && ble_connection_state)
   {
-    // TODO: Possibly fix
     uint8_t txBuf[4];
     txBuf[0] = heartRateAvg;
-    txBuf[1] = stepCount >> 8;
-    txBuf[2] = stepCount;
+    txBuf[1] = (stepCount+dmpStepCount) >> 8;
+    txBuf[2] = (stepCount+dmpStepCount);
     txBuf[3] = 0;
     Write_UART_TX((char*)txBuf, 4);
     ISR_CTR = 0;

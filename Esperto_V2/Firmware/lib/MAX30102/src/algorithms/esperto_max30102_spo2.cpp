@@ -58,7 +58,7 @@
 */
 
 #include "arduino.h"
-#include "spo2_algorithm.h"
+#include "esperto_max30102_spo2.h"
 
 #if defined(ARDUINO_AVR_UNO)
 //Arduino Uno doesn't have enough SRAM to store 100 samples of IR led data and red led data in 32-bit format

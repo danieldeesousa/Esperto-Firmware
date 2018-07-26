@@ -2,9 +2,10 @@
   ******************************************************************************
   * @file    samd_bluenrg_ble.cpp
   * @author  Daniel De Sousa
-  * @version V2.0.0
+  * @version V2.0.1
   * @date    24-July-2018
   * @brief   
+  * @note    Revision: Cleanup
   ******************************************************************************
 */
   
@@ -24,79 +25,19 @@ extern "C" {
 
 extern volatile uint32_t ms_counter;
 
-/** @addtogroup BSP
- *  @{
- */
-
-/** @defgroup X-NUCLEO-IDB04A1
- *  @{
- */
- 
-/** @defgroup STM32_BLUENRG_BLE
- *  @{
- */
-
-/** @defgroup STM32_BLUENRG_BLE_Private_Defines 
- * @{
- */ 
-
+// Private defines
 #define HEADER_SIZE 5
 #define MAX_BUFFER_SIZE 255
 #define TIMEOUT_DURATION 15
 
-/**
- * @}
- */
-
-/** @defgroup STM32_BLUENRG_BLE_Private_Variables
- * @{
- */
-
+// Private variables
 SPI_HandleTypeDef SpiHandle;
-
 SPIClass *BLESPI = &SPI;
 
-/**
- * @}
- */
-
-/** @defgroup STM32_BLUENRG_BLE_Private_Function_Prototypes 
- *  @{
- */
-
-/* Private function prototypes -----------------------------------------------*/
-static void us150Delay(void);
-void set_irq_as_output(void);
-void set_irq_as_input(void);
-
-/**
- * @}
- */ 
-
-/** @defgroup STM32_BLUENRG_BLE_Exported_Functions 
- * @{
- */ 
-
-/**
- * @brief  This function is a utility to print the log time
-*          in the format HH:MM:SS:MSS (DK GUI time format)
- * @param  None
- * @retval None
- */
+/* Utility to print the log time in the format HH:MM:SS:MSS (DK GUI time format) */
 void print_csv_time(void){
   uint32_t ms = ms_counter;
   PRINT_CSV("%02d:%02d:%02d.%03d", ms/(60*60*1000)%24, ms/(60*1000)%60, (ms/1000)%60, ms%1000);
-}
-
-/**
- * @brief  This function is used for low level initialization of the SPI 
- *         communication with the BlueNRG Expansion Board.
- * @param  hspi: SPI handle.
- * @retval None
- */
-void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
-{
-  //
 }
 
 /**
@@ -159,8 +100,6 @@ void BNRG_SPI_Init(void)
   BLESPI->setClockDivider(48);
   attachInterrupt(BNRG_SPI_EXTI_PIN,HCI_Isr,RISING);
 #endif
-
-  //__HAL_SPI_ENABLE(&SpiHandle);
 }
 
 /**
@@ -183,14 +122,13 @@ void BlueNRG_RST(void)
  * @param  None
  * @retval 1 if data are present, 0 otherwise
  */
-// FIXME: find a better way to handle this return value (bool type? TRUE and FALSE)
 uint8_t BlueNRG_DataPresent(void)
 {
   if (HAL_GPIO_ReadPin(BNRG_SPI_EXTI_PORT, BNRG_SPI_EXTI_PIN) == GPIO_PIN_SET)
       return 1;
   else  
       return 0;
-} /* end BlueNRG_DataPresent() */
+} 
 
 /**
  * @brief  Activate internal bootloader using pin.
@@ -199,9 +137,7 @@ uint8_t BlueNRG_DataPresent(void)
  */
 void BlueNRG_HW_Bootloader(void)
 {
-  set_irq_as_output();
   BlueNRG_RST();
-  set_irq_as_input();
 }
 
 /**
@@ -219,21 +155,19 @@ int32_t BlueNRG_SPI_Read_All(uint8_t *buffer, uint8_t buff_size)
   const uint8_t header_master[5] = {0x0b, 0x00, 0x00, 0x00, 0x00};
   uint8_t header_slave[5];
   
-  //__disable_irq();
-  
   HAL_GPIO_WritePin(BNRG_SPI_CS_PORT, BNRG_SPI_CS_PIN, GPIO_PIN_RESET);
   
-  /* Read the header */
+  // Read the header
   HAL_SPI_TransmitReceive_Opt(header_master, header_slave, HEADER_SIZE);
   
+  // Check if device is ready
   if (header_slave[0] == 0x02) {
-    // device is ready
     
     byte_count = (header_slave[4]<<8)|header_slave[3];
     
     if (byte_count > 0) {
       
-      // avoid to read more data that size of the buffer
+      //Avoid reading more data that size of the buffer
       if (byte_count > buff_size)
         byte_count = buff_size;
       
@@ -245,8 +179,6 @@ int32_t BlueNRG_SPI_Read_All(uint8_t *buffer, uint8_t buff_size)
   
   // Release CS line.
   HAL_GPIO_WritePin(BNRG_SPI_CS_PORT, BNRG_SPI_CS_PIN, GPIO_PIN_SET);
-  
-  //__enable_irq();
   
 #ifdef PRINT_CSV_FORMAT
   if (len > 0) {
@@ -285,14 +217,14 @@ int32_t BlueNRG_SPI_Write(uint8_t* data1, uint8_t* data2, uint8_t Nb_bytes1, uin
   
   if(header_slave[0] != 0x02){
     result = -1;
-    goto failed; // BlueNRG not awake.
+    goto failed; // BlueNRG not awake
   }
   
   rx_bytes = header_slave[1];
   
   if(rx_bytes < Nb_bytes1){
     result = -2;
-    goto failed; // BlueNRG .      
+    goto failed;
   }
   
   HAL_SPI_Transmit_Opt(data1, Nb_bytes1);
@@ -317,37 +249,6 @@ failed:
   
   return result;
 
-}
-      
-/**
- * @brief  Set in Output mode the IRQ.
- * @param  None
- * @retval None
- */
-void set_irq_as_output(void)
-{
-  /* Pull IRQ high */
-}
-
-/**
- * @brief  Set the IRQ in input mode.
- * @param  None
- * @retval None
- */
-void set_irq_as_input(void)
-{
-
-}
-
-/**
- * @brief  Utility function for delay
- * @param  None
- * @retval None
- * NOTE: TODO: implement with clock-independent function.
- */
-static void us150Delay(void)
-{
-  delayMicroseconds(150);
 }
 
 /**

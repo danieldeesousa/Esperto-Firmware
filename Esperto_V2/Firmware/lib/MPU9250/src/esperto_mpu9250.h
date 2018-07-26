@@ -1,36 +1,26 @@
-/******************************************************************************
-SparkFunMPU9250-DMP.h - MPU-9250 Digital Motion Processor Arduino Library 
-Jim Lindblom @ SparkFun Electronics
-original creation date: November 23, 2016
-https://github.com/sparkfun/SparkFun_MPU9250_DMP_Arduino_Library
-
-This library implements motion processing functions of Invensense's MPU-9250.
-It is based on their Emedded MotionDriver 6.12 library.
-	https://www.invensense.com/developers/software-downloads/
-
-Development environment specifics:
-Arduino IDE 1.6.12
-SparkFun 9DoF Razor IMU M0
-
-Supported Platforms:
-- ATSAMD21 (Arduino Zero, SparkFun SAMD21 Breakouts)
-******************************************************************************/
-#ifndef _SPARKFUN_MPU9250_DMP_H_
-#define _SPARKFUN_MPU9250_DMP_H_
+/*
+  ******************************************************************************
+  * @file    esperto_mpu9250.h
+  * @author  Daniel De Sousa
+  * @version V2.0.0
+  * @date    25-July-2018
+  * @brief   MPU9250 Digital Motion Processor driver
+  ******************************************************************************
+*/
+#ifndef _ESPERTO_MPU9250_H_
+#define _ESPERTO_MPU9250_H_
 
 #include <Wire.h>
 #include <Arduino.h>
 
-// Optimally, these defines would be passed as compiler options, but Arduino
-// doesn't give us a great way to do that.
 #define MPU9250
 #define AK8963_SECONDARY
 #define COMPASS_ENABLED
 
 // Include the Invensense MPU9250 driver and DMP keys:
 extern "C" {
-#include "util/inv_mpu.h"
-#include "util/inv_mpu_dmp_motion_driver.h"
+#include "drivers/inv_mpu.h"
+#include "drivers/inv_mpu_dmp_motion_driver.h"
 }
 
 typedef int inv_error_t;
@@ -384,4 +374,4 @@ private:
 	unsigned short orientation_row_2_scale(const signed char *row);
 };
 
-#endif // _SPARKFUN_MPU9250_DMP_H_
+#endif // _ESPERTO_MPU9250_H_

@@ -1,5 +1,12 @@
 /*
- */
+  ******************************************************************************
+  * @file    MPU9250_RegisterMap.h
+  * @author  Daniel De Sousa
+  * @version V2.0.0
+  * @date    25-July-2018
+  * @brief   Register addresses
+  ******************************************************************************
+*/
 #ifndef _MPU9250_REGISTER_MAP_H_
 #define _MPU9250_REGISTER_MAP_H_
 

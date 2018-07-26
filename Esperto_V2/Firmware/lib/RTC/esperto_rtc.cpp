@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    esperto_rtc.cpp
   * @author  Daniel De Sousa
-  * @version V2.0.0
+  * @version V2.0.1
   * @date    16-July-2018
   * @brief   
   ******************************************************************************
@@ -110,7 +110,26 @@ void Esperto_RTC::standbyMode()
   __WFI();
 }
 
-// GET Functions
+void Esperto_RTC::enableAlarm(Alarm_Match match)
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].MASK.bit.SEL = match;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+void Esperto_RTC::disableAlarm()
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].MASK.bit.SEL = 0x00;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+/* Time/Date Functions */
+/* GET Functions */
 uint8_t Esperto_RTC::getSeconds()
 {
   RTCreadRequest();
@@ -147,7 +166,7 @@ uint8_t Esperto_RTC::getYear()
   return RTC->MODE2.CLOCK.bit.YEAR;
 }
 
-// SET Functions
+/* SET Functions */
 void Esperto_RTC::setSeconds(uint8_t seconds)
 {
   if (_configured) {
@@ -219,6 +238,112 @@ void Esperto_RTC::setDate(uint8_t day, uint8_t month, uint8_t year)
     setYear(year);
   }
 }
+
+/* Alarm Functions */
+/* GET Functions */
+uint8_t Esperto_RTC::getAlarmSeconds()
+{
+  return RTC->MODE2.Mode2Alarm[0].ALARM.bit.SECOND;
+}
+
+uint8_t Esperto_RTC::getAlarmMinutes()
+{
+  return RTC->MODE2.Mode2Alarm[0].ALARM.bit.MINUTE;
+}
+
+uint8_t Esperto_RTC::getAlarmHours()
+{
+  return RTC->MODE2.Mode2Alarm[0].ALARM.bit.HOUR;
+}
+
+uint8_t Esperto_RTC::getAlarmDay()
+{
+  return RTC->MODE2.Mode2Alarm[0].ALARM.bit.DAY;
+}
+
+uint8_t Esperto_RTC::getAlarmMonth()
+{
+  return RTC->MODE2.Mode2Alarm[0].ALARM.bit.MONTH;
+}
+
+uint8_t Esperto_RTC::getAlarmYear()
+{
+  return RTC->MODE2.Mode2Alarm[0].ALARM.bit.YEAR;
+}
+
+/* SET Functions */
+void Esperto_RTC::setAlarmSeconds(uint8_t seconds)
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].ALARM.bit.SECOND = seconds;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+void Esperto_RTC::setAlarmMinutes(uint8_t minutes)
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].ALARM.bit.MINUTE = minutes;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+void Esperto_RTC::setAlarmHours(uint8_t hours)
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].ALARM.bit.HOUR = hours;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+void Esperto_RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
+{
+  if (_configured) {
+    setAlarmSeconds(seconds);
+    setAlarmMinutes(minutes);
+    setAlarmHours(hours);
+  }
+}
+
+void Esperto_RTC::setAlarmDay(uint8_t day)
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].ALARM.bit.DAY = day;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+void Esperto_RTC::setAlarmMonth(uint8_t month)
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].ALARM.bit.MONTH = month;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+void Esperto_RTC::setAlarmYear(uint8_t year)
+{
+  if (_configured) {
+    RTC->MODE2.Mode2Alarm[0].ALARM.bit.YEAR = year;
+    while (RTCisSyncing())
+      ;
+  }
+}
+
+void Esperto_RTC::setAlarmDate(uint8_t day, uint8_t month, uint8_t year)
+{
+  if (_configured) {
+    setAlarmDay(day);
+    setAlarmMonth(month);
+    setAlarmYear(year);
+  }
+}
+
 
 /*
  * Private Utility Functions

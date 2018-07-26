@@ -27,7 +27,7 @@ typedef void(*voidFuncPtr)(void);
 class RTCZero {
 public:
 
-  enum Alarm_Match: uint8_t // Should we have this enum or just use the identifiers from /component/rtc.h ?
+  enum Alarm_Match: uint8_t
   {
     MATCH_OFF          = RTC_MODE2_MASK_SEL_OFF_Val,          // Never
     MATCH_SS           = RTC_MODE2_MASK_SEL_SS_Val,           // Every Minute

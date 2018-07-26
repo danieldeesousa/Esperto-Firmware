@@ -1,53 +1,35 @@
-/*************************************************** 
- This is a library written for the Maxim MAX30105 Optical Smoke Detector
- It should also work with the MAX30102. However, the MAX30102 does not have a Green LED.
+/*
+  ******************************************************************************
+  * @file    esperto_max30102.h
+  * @author  Daniel De Sousa
+  * @version V2.0.0
+  * @date    25-July-2018
+  * @brief   This library was developed for use with the Maxim Integrated MAX30102 over I2C
+  ******************************************************************************
+*/
 
- These sensors use I2C to communicate, as well as a single (optional)
- interrupt line that is not currently supported in this driver.
- 
- Written by Peter Jansen and Nathan Seidle (SparkFun)
- BSD license, all text above must be included in any redistribution.
- *****************************************************/
+#ifndef _ESPERTO_MAX30102_H_
+#define _ESPERTO_MAX30102_H_
 
-#pragma once
-
-#if (ARDUINO >= 100)
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-
+#include "Arduino.h"
 #include <Wire.h>
 
-#define MAX30105_ADDRESS          0x57 //7-bit I2C Address
-//Note that MAX30102 has the same I2C address and Part ID
+// Algorithm includes
+#include "algorithms/esperto_max30102_hr.h"
+#include "algorithms/esperto_max30102_spo2.h"
 
+#define MAX30102_ADDRESS          0x57
 #define I2C_SPEED_STANDARD        100000
 #define I2C_SPEED_FAST            400000
 
-//Define the size of the I2C buffer based on the platform the user has
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+// Define the size of the I2C buffer based on the platform the user has
+#define I2C_BUFFER_LENGTH SERIAL_BUFFER_SIZE
 
-  //I2C_BUFFER_LENGTH is defined in Wire.H
-  #define I2C_BUFFER_LENGTH BUFFER_LENGTH
-
-#elif defined(__SAMD21G18A__)
-
-  //SAMD21 uses RingBuffer.h
-  #define I2C_BUFFER_LENGTH SERIAL_BUFFER_SIZE
-
-#else
-
-  //The catch-all default is 32
-  #define I2C_BUFFER_LENGTH 32
-
-#endif
-
-class MAX30105 {
+class MAX30102 {
  public: 
-  MAX30105(void);
+  MAX30102(void);
 
-  boolean begin(TwoWire &wirePort = Wire, uint32_t i2cSpeed = I2C_SPEED_STANDARD, uint8_t i2caddr = MAX30105_ADDRESS);
+  boolean begin(TwoWire &wirePort = Wire, uint32_t i2cSpeed = I2C_SPEED_STANDARD, uint8_t i2caddr = MAX30102_ADDRESS);
 
   uint32_t getRed(void); //Returns immediate red value
   uint32_t getIR(void); //Returns immediate IR value
@@ -72,13 +54,13 @@ class MAX30105 {
 
   void setProximityThreshold(uint8_t threshMSB);
 
-  //Multi-led configuration mode (page 22)
+  // Multi-led configuration mode (page 22)
   void enableSlot(uint8_t slotNumber, uint8_t device); //Given slot number, assign a device to slot
   void disableSlots(void);
   
   // Data Collection
 
-  //Interrupts (page 13, 14)
+  // Interrupts (page 13, 14)
   uint8_t getINT1(void); //Returns the main interrupt group
   uint8_t getINT2(void); //Returns the temp ready interrupt
   void enableAFULL(void); //Enable/disable individual interrupts
@@ -92,13 +74,13 @@ class MAX30105 {
   void enableDIETEMPRDY(void);
   void disableDIETEMPRDY(void);
 
-  //FIFO Configuration (page 18)
+  // FIFO Configuration (page 18)
   void setFIFOAverage(uint8_t samples);
   void enableFIFORollover();
   void disableFIFORollover();
   void setFIFOAlmostFull(uint8_t samples);
   
-  //FIFO Reading
+  // FIFO Reading
   uint16_t check(void); //Checks for new data and fills FIFO
   uint8_t available(void); //Tells caller how many new samples are available (head - tail)
   void nextSample(void); //Advances the tail of the sense array
@@ -110,7 +92,7 @@ class MAX30105 {
   uint8_t getReadPointer(void);
   void clearFIFO(void); //Sets the read/write pointers to zero
 
-  //Proximity Mode Interrupt Threshold
+  // Proximity Mode Interrupt Threshold
   void setPROXINTTHRESH(uint8_t val);
 
   // Die Temperature
@@ -141,3 +123,5 @@ class MAX30105 {
 
   void bitMask(uint8_t reg, uint8_t mask, uint8_t thing);
 };
+
+#endif // // ESPERTO_MAX30102_H
