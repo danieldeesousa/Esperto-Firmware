@@ -1,6 +1,5 @@
-#include <U8g2lib.h>
+#include "esperto_watch.h"
 #include "esperto_mpu9250.h"
-#include "esperto.h"
 #include "esperto_rtc.h"
 #include "esperto_fram.h"
 #include "esperto_timer.h"
@@ -22,10 +21,10 @@ char timeBT[15]; // time info HH:MM:SS MM
 char callBT[20]; // caller number info
 char textBT[20]; // text number info
 volatile uint8_t notifCounter = 0;
+int connected = FALSE;
 uint8_t ble_rx_buffer[21];
 uint8_t ble_rx_buffer_len = 0;
 uint8_t ble_connection_state = false;
-int connected = FALSE;
 volatile uint8_t set_connectable = 1;
 uint16_t connection_handle = 0;
 uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
@@ -35,23 +34,23 @@ Esperto_RTC rtc; // instance of RTC class
 bool deviceInit = 0; // prevents time showing up without initial BLE connection
 
 // MPU9250
-MPU9250_DMP imu;
+MPU9250_DMP imu;  // instance of MPU9250 class
 float iir_Av = 0; // IIR filter average
-const int stepDiffMinThreshold = 20; // minimum difference between step max and min for considered step
-int stepCount = 0; // total number of steps taken
-double stepMax = 0; // peak of gyration data
-double stepMin = 0; // trough of gyration data
-double gyroData[3]; // array storing recent gyration readings
+#define STEP_MIN_DIFF_THRESHOLD 20 // minimum difference between step max and min for considered step
+uint16_t stepCount = 0; // total number of steps taken
+float stepMax = 0; // peak of gyration data
+float stepMin = 0; // trough of gyration data
+float gyroData[3]; // array storing recent gyration readings
 uint16_t dmpStepCount = 0;
 
 // Heart Rate Variables
 MAX30102 heartRateSensor; // instance of MAX30102 class
-const byte arraySizeHR = 5; // size of array containing latest HR values
-byte heartRates[arraySizeHR]; // array containing latest HR values
-byte heartRateIndex = 0; // index latest value was inputted into array
-long prevHeartBeat = 0; // time at which the last heart beat occurred
+#define ARRAY_SIZE_HR 5 // size of array containing latest HR values
+uint8_t heartRates[ARRAY_SIZE_HR]; // array containing latest HR values
+uint8_t heartRateIndex = 0; // index latest value was inputted into array
+uint32_t prevHeartBeat = 0; // time at which the last heart beat occurred
 float heartRate; // current heart rate
-int heartRateAvg; // average heart rate which will we be displayed
+uint8_t heartRateAvg; // average heart rate which will we be displayed
 long timeLastHRBeat = 0;
 
 // FRAM Variables
@@ -60,7 +59,7 @@ bool isDataSent = 0; // Determines if initial data was sent for the current BLE 
 
 // 1Hz Timer ISR -- 1Hz timer which times writing to FRAM, BLE, display
 volatile uint8_t ISR_CTR = 0; // counter used in addition to timer to determine when memory is being stored/sent
-bool updateDisplay_flag = 0; // control when display is updated
+volatile bool updateDisplay_flag = 0; // control when display is updated
 void ISR_timer3(struct tc_module *const module_inst) 
 { 
   ISR_CTR = ISR_CTR + 1;
@@ -70,8 +69,8 @@ void ISR_timer3(struct tc_module *const module_inst)
 SAMDtimer timer3_1Hz = SAMDtimer(3, ISR_timer3, 1e6); // 1Hz timer interrupt
 
 // Battery Variables
-const uint8_t chargePin = 3; // digital 3 - used to determine if charging is complete
-const uint8_t batteryPin = 0; // analog 1: used to determine when battery is low/high
+#define chargePin 3 // digital 3 - used to determine if charging is complete
+#define batteryPin 0 // analog 0: used to determine when battery is low/high
 const float referenceVolts = 5.0; // the default reference on a 5-volt board
 
 // Bootloader
@@ -283,7 +282,7 @@ void countSteps()
     stepMax = gyroData[1];// update peak value      
     double maxMinDiff = stepMax - stepMin; 
     // if a step is detected
-    if (maxMinDiff > stepDiffMinThreshold)
+    if (maxMinDiff > STEP_MIN_DIFF_THRESHOLD)
     {
         stepCount+=2; // increase by 2 as 2 steps were detected
     }
@@ -315,14 +314,14 @@ void calculateHR()
     if (heartRate < 120 && heartRate > 40)
     {
       // store heart rate
-      heartRates[heartRateIndex++] = (byte)heartRate;
-      heartRateIndex %= arraySizeHR; // use modulus op. to determine current index
+      heartRates[heartRateIndex++] = heartRate;
+      heartRateIndex %= ARRAY_SIZE_HR; // use modulus op. to determine current index
 
       // calcute average heart rate
       heartRateAvg = 0; // reset
-      for (int i = 0; i < arraySizeHR; i++)
+      for (int i = 0; i < ARRAY_SIZE_HR; i++)
         heartRateAvg += heartRates[i]; // add up all heart rates
-      heartRateAvg /= arraySizeHR; // determine average by dividing
+      heartRateAvg /= ARRAY_SIZE_HR; // determine average by dividing
 
       timeLastHRBeat = millis();
     }

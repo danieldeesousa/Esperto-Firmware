@@ -1,20 +1,18 @@
 /*
   ******************************************************************************
-  * @file    esperto.h
+  * @file    watch_display.h
   * @author  Daniel De Sousa
-  * @version V2.0.1
-  * @date    24-July-2018
-  * @brief   Main Esperto library
-  * @note 	 Last revision: Removed BLE variables and placed within esperto_stble.h
+  * @version V2.0.2
+  * @date    26-July-2018
+  * @brief   Esperto Watch Display Library
   ******************************************************************************
 */
+#ifndef __WATCH_DISPLAY_H
+#define __WATCH_DISPLAY_H
 
-#ifndef __ESPERTO_H
-#define __ESPERTO_H
+#include "esperto_watch_inc.h"
 
 #include <stdint.h>
-
-// Display Variables -- START
 
 // Bootloader logo: Width x Height = 64,64
 static const uint8_t boot[] = {
@@ -97,7 +95,5 @@ static const uint8_t battMed[] = {
    0x00, 0x00, 0x00, 0x00, 0xff, 0x01, 0x1f, 0x03, 0x1f, 0x03, 0x1f, 0x03,
    0x1f, 0x03, 0xff, 0x01, 0x00, 0x00, 0x00, 0x00 
 };
-
-// Display variables -- END
 
 #endif 
