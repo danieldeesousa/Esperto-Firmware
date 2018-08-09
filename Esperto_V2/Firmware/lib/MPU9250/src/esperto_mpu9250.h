@@ -2,9 +2,10 @@
   ******************************************************************************
   * @file    esperto_mpu9250.h
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    25-July-2018
+  * @version V2.0.3
+  * @date    07-Aug-2018
   * @brief   MPU9250 Digital Motion Processor driver
+  * @note    Revision: Motion wakeup
   ******************************************************************************
 */
 #ifndef _ESPERTO_MPU9250_H_
@@ -70,6 +71,14 @@ public:
 	float heading;
 	
 	MPU9250_DMP();
+	
+	// shutdown register
+	uint8_t shutDownPower(bool enable);
+	
+	// enable/disable interrupt to detect motion wakeup
+	// NOTE: assumes certain register values
+	void enableMotionWakeup(uint8_t threshold, uint8_t freq);
+	void disableMotionWakeup(void);
 	
 	// begin(void) -- Verifies communication with the MPU-9250 and the AK8963,
 	// and initializes them to the default state:

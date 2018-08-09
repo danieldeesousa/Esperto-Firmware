@@ -2,17 +2,42 @@
   ******************************************************************************
   * @file    esperto_mpu9250.cpp
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    25-July-2018
+  * @version V2.0.3
+  * @date    07-Aug-2018
   * @brief   
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
 #include "drivers/MPU9250_RegisterMap.h"
+#include "drivers/mpu9250_i2c.h"
 
 extern "C" {
 #include "drivers/inv_mpu.h"
 }
+
+// Register definitions
+// ACCEL_CONFIG_2
+#define BIT_FCH_B_H             (0x08)
+#define BIT_FCH_B_L             (0x04)
+#define BIT_LPF_A_H             (0x02)
+#define BIT_LPF_A_L             (0x01)
+// MOT_DETECT_CTRL
+#define BIT_INTEL_EN            (0x80)
+#define BIT_INTEL_MODE          (0x40)
+// PWR_MGMT_1
+#define BIT_PWR_SLEEP           (0x40)
+#define BIT_PWR_CYCLE           (0x20)
+#define BIT_PWR_STANDBY         (0x10)
+// PWR_MGMT_2
+#define BIT_DIS_XA              (0x20)
+#define BIT_DIS_YA              (0x10)
+#define BIT_DIS_ZA              (0x08)
+#define BIT_DIS_XG              (0x04)
+#define BIT_DIS_YG              (0x02)
+#define BIT_DIS_ZG              (0x01)
+
+// Device definitions
+#define DEVICE_ADDR			    (0x68)
 
 static unsigned char mpu9250_orientation;
 static unsigned char tap_count;
@@ -26,6 +51,90 @@ MPU9250_DMP::MPU9250_DMP()
 	_mSense = 6.665f; // Constant - 4915 / 32760
 	_aSense = 0.0f;   // Updated after accel FSR is set
 	_gSense = 0.0f;   // Updated after gyro FSR is set
+}
+
+uint8_t MPU9250_DMP::shutDownPower(bool enable){
+	unsigned char data[1];
+
+	// Read current power management register
+	arduino_i2c_read(DEVICE_ADDR, MPU9250_PWR_MGMT_1, 1, data);
+	
+	// enable / disbale SLEEP bit
+	if(enable){
+		data[0] |= BIT_PWR_SLEEP;
+	}
+	else{
+		data[0] &= ~(BIT_PWR_SLEEP);
+	}
+    
+	// Write to register
+    arduino_i2c_write(DEVICE_ADDR, MPU9250_PWR_MGMT_1, 1, data);
+	
+	return data[0];
+}
+
+void MPU9250_DMP::enableMotionWakeup(uint8_t threshold, uint8_t freq){
+	unsigned char data[1];
+
+	// Ensure accelerometer is running
+	// PWR_MGMT_1
+	// PWR_MGMT_2
+	
+	// Set acceleromter LPF
+	// ACCEL_CONFIG_2
+	
+	// Enable motion interrupts
+	// INT_ENABLE
+	data[0] = 0x40;
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_INT_ENABLE, 1, data);
+	
+	// Enable accel hardware intelligence
+	// MOT_DETECT_CTRL
+	
+	// Set motion threshold
+	// WOM_THR
+	data[0] = threshold;
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_WOM_THR, 1, data);
+	
+	// Set wake up frequency
+	// LP_ACCEL_ODR
+	data[0] = freq;
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_LP_ACCEL_ODR, 1, data);
+	
+	// Enable cycle mode (Accel Low Power Mode)
+	// PWR_MGMT_1
+	arduino_i2c_read(DEVICE_ADDR, MPU9250_PWR_MGMT_1, 1, data);
+	data[0] |= (BIT_PWR_CYCLE);
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_PWR_MGMT_1, 1, data);
+}
+
+void MPU9250_DMP::disableMotionWakeup(){
+	unsigned char data[1];
+	
+	// Enable gyro and exit sleep modes
+	// PWR_MGMT_1
+	arduino_i2c_read(DEVICE_ADDR, MPU9250_PWR_MGMT_1, 1, data);
+	data[0] &= ~(BIT_PWR_SLEEP | BIT_PWR_CYCLE | BIT_PWR_STANDBY);
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_PWR_MGMT_1, 1, data);
+	// PWR_MGMT_2
+	
+	// Disable acceleromter LPF
+	// ACCEL_CONFIG_2
+
+	// Disable motion interrupts
+	// INT_ENABLE
+	data[0] = 0x02;
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_INT_ENABLE, 1, data);
+	
+	// Disable accel hardware intelligence
+	// MOT_DETECT_CTRL
+	
+	// Reset wake up frequency and motion threshold
+	// LP_ACCEL_ODR
+	data[0] = 0;
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_LP_ACCEL_ODR, 1, data);
+	// WOM_THR
+	arduino_i2c_write(DEVICE_ADDR, MPU9250_WOM_THR, 1, data);
 }
 
 inv_error_t MPU9250_DMP::begin(void)
