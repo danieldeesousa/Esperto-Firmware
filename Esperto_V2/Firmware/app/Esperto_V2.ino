@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    29-July-2018
+  * @version V2.0.3
+  * @date    09-Aug-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision:
+  * @note    Last revision: Add MCU standby feature
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -29,12 +29,17 @@ uint8_t bleConnectionState = false;
 
 // Heart Rate Variables
 int heartRateAvg; // average heart rate which will we be displayed
+#define IR_STANDBY_THRESH 50000 // IR min for device to go into standy mode
 
 // MPU9250
-uint16_t stepCount = 0;    // total number of steps taken
-uint16_t dmpStepCount = 0; // total number of steps taken calculated by the Digital Motion Processor
+uint16_t stepCount = 0;       // total number of steps taken
+uint16_t dmpStepCount = 0;    // total number of steps taken calculated by the Digital Motion Processor
+#define MOTION_WAKE_THRESH 10 // 10mg - acceleration at which a motion wakeup occurs
+#define WAKEUP_FREQ 7         // 7 = 31.25 Hz - frequency at which the MPU wakes up to read accelerometer
+#define INTERRUPT_PIN 7       // Digital 7 - connected to MPU interrupt pin
 
 // FRAM Variables
+#define FRAM_SIZE 32768 // in bytes
 uint16_t countFRAM = 0; // stores the address which is going to be used by the FRAM
 bool isDataSent = 0;    // Determines if initial data was sent for the current BLE connection
 
@@ -50,9 +55,14 @@ void ISR_timer3(struct tc_module *const module_inst)
 SAMDtimer timer3_1Hz = SAMDtimer(3, ISR_timer3, 1e6); // 1Hz timer interrupt
 
 // Power management definitions
-#define CHARGE_PIN 3        // digital 3 - used to determine if charging is complete
-#define BATTERY_PIN 0       // analog 0: used to determine when battery is low/high
-#define REFERENCE_VOLTAGE 5 // the default reference voltage on a 5-volt board
+#define CHARGE_PIN 3                  // digital 3: determine if charging is complete
+#define BATTERY_PIN 0                 // analog 0: determine when battery is low/high
+#define REFERENCE_VOLTAGE (3.3)       // the default reference voltage on a 3.3V mcu
+#define ADC_RESOLUTION (1023.0)       // 10 bit ADC
+#define VOLTAGE_SHUTDOWN_THRESH (3.5) // Voltage at which peripherals / mcu will go to sleep
+#define PERIPH_SHUTDOWN 1             // Shutdown peripheral
+#define PERIPH_WAKEUP 0               // Wakeup peripheral
+float inputVoltage;                   // input voltage measured (USB, battery) 
 
 // Bootloader setup
 void setup()
@@ -171,15 +181,13 @@ void updateDisplay()
   if(bleConnectionState == true)
     u8g2.drawXBMP(118, 0, 10, 10, BT);
 
-  // obtain and display battery status
-  int battVoltRaw = analogRead(BATTERY_PIN);
-  float battVolt = 2*(battVoltRaw / 1023.0) * REFERENCE_VOLTAGE; // 2* because of voltage divider config
-  int isChargeComplete = digitalRead(CHARGE_PIN); // HIGH when charging is complete
+  // display battery status
+  bool isChargeComplete = digitalRead(CHARGE_PIN); // HIGH when charging is complete
   // display full battery
-  if ((battVolt >= 3.5 && battVolt <= 4.5) || isChargeComplete)
+  if ((inputVoltage >= 3.5 && inputVoltage <= 4.5) || isChargeComplete)
     u8g2.drawXBMP(105, 0, 10, 10, battHigh);
   // display charging battery - toggle when charging
-  else if (battVolt > 4.5 && !isChargeComplete){
+  else if (inputVoltage > 4.5 && !isChargeComplete){
     if(ISR_CTR%3 == 0)
       u8g2.drawXBMP(105, 0, 10, 10, battLow);
     else if(ISR_CTR%3 == 1)
@@ -188,7 +196,7 @@ void updateDisplay()
       u8g2.drawXBMP(105, 0, 10, 10, battHigh);
   }
   // display low battery
-  else if (battVolt < 3.5)
+  else if (inputVoltage < 3.5)
     u8g2.drawXBMP(105, 0, 10, 10, battLow);
 }
 
@@ -214,7 +222,7 @@ void setRTCDate()
 void writeFRAM()
 {
   // Ensure memory is not full
-  if(countFRAM < 32768)
+  if(countFRAM < FRAM_SIZE)
   {
      fram.write8(countFRAM, heartRateAvg);
      fram.write8(countFRAM+1, (stepCount + dmpStepCount) >> 8);
@@ -263,8 +271,30 @@ void calculateHR()
   // obtain infrared value
   long irValue = heartRateSensor.getIR();
 
-  // if heart beat was detected and valid IR value
-  if (checkForBeat(irValue) == true && irValue > 50000)
+  // if presence is not detected on sensor, go into standby mode
+  // Note: ISR_CTR is used in case user wants to check time but not wear device
+  if(irValue < IR_STANDBY_THRESH && (ISR_CTR%10 == 0))
+  {
+      // shutdown display and heart rate sensor
+      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+      heartRateSensor.shutDown();
+
+      // enable motion on wake up interrupt
+      imu.enableMotionWakeup(MOTION_WAKE_THRESH, WAKEUP_FREQ);
+      
+      // wait on motion interrupt
+      while(digitalRead(INTERRUPT_PIN) != LOW){}
+
+      // disable interrupt and turn on peripherals
+      imu.disableMotionWakeup();
+      u8g2.setPowerSave(PERIPH_WAKEUP); 
+      heartRateSensor.wakeUp();
+
+      return;
+  }
+
+  // if heart beat was detected
+  else if (checkForBeat(irValue))
   {
     // calculate time difference between 2 beats
     uint32_t heartBeatTimeDiff = millis() - prevHeartBeat;
@@ -273,7 +303,7 @@ void calculateHR()
     // use the difference to calculate the heart rate
     float heartRate = 60 / (heartBeatTimeDiff / 1000.0); // 60 s in 1 min, 1000 ms in 1 s
 
-    // only use valid heart rates
+    // only use valid heart rates between 40 and 120 bpm
     if (heartRate < 120 && heartRate > 40)
     {
       // store heart rate
@@ -344,15 +374,58 @@ void countSteps()
   }
 }
 
+void alarmInterrupt()
+{
+  // Do nothing
+}
+
+
+void powerManage(){
+  // Read analog power inputs
+  int inputVoltageRaw = analogRead(BATTERY_PIN);
+  inputVoltage = 2*(inputVoltageRaw / ADC_RESOLUTION) * REFERENCE_VOLTAGE; // 2* because of voltage divider config
+
+  // Check if peripherals need to be shutdown
+  if(inputVoltage < VOLTAGE_SHUTDOWN_THRESH)
+  {
+    // Shutdown peripherals
+    imu.shutDownPower(PERIPH_SHUTDOWN);
+    u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+    heartRateSensor.shutDown();
+
+    // loop until input power is sufficient for MCU to leave shutdown mode
+    while(inputVoltage < VOLTAGE_SHUTDOWN_THRESH)
+    {
+      // Set MCU to sleep for 1 minute
+      rtc.setAlarmSeconds(0);
+      rtc.enableAlarm(rtc.MATCH_SS);
+      rtc.attachInterrupt(alarmInterrupt);
+      // Put MCU to sleep for 1 minute
+      rtc.standbyMode();
+
+      // Once MCU is awoken, check input voltage again
+      inputVoltageRaw = analogRead(BATTERY_PIN);
+      inputVoltage = 2*(inputVoltageRaw / ADC_RESOLUTION) * REFERENCE_VOLTAGE; // 2* because of voltage divider config
+      if(inputVoltage >= VOLTAGE_SHUTDOWN_THRESH){
+        // Input is sufficient - Turn on peripherals
+        imu.shutDownPower(PERIPH_WAKEUP);
+        u8g2.setPowerSave(PERIPH_WAKEUP); 
+        heartRateSensor.wakeUp();
+        break;
+      }
+    }
+  }
+}
+
 // Main loop function
 void loop()
 {
   static bool deviceInit = 0; // prevents time showing up without initial BLE connection
   
-  //Process any ACI commands or events from BLE
+  // Process any ACI commands or events from BLE
   bleProcess();
-  
-  //Check if data is available
+ 
+  // Check if data is available
   if (bleRXBbufferLen) 
   { 
     if(strncmp((const char*)bleRXBuffer + 2, "/", 1) == 0){
@@ -399,7 +472,10 @@ void loop()
   // Update display
   if(updateDisplay_flag && deviceInit)
   {    
-    // update display
+    // Check on power inputs
+    powerManage();
+    
+    // Update display
     u8g2.firstPage();
     do {
       updateDisplay();
@@ -452,6 +528,10 @@ void initMPU9250()
   imu.dmpBegin(dmpFeatureMask);
   imu.dmpSetPedometerSteps(0);
   imu.dmpSetPedometerTime(0);
+  
+  // Configure interrupt as active-low, using GPIO internal pull-up resistor
+  pinMode(INTERRUPT_PIN, INPUT_PULLUP);
+  imu.setIntLevel(INT_ACTIVE_LOW);
 }
 
 // Initializes BLE and puts it into peripheral mode
