@@ -1,76 +1,18 @@
-/** \file algorithm.cpp ******************************************************
-*
-* Project: MAXREFDES117#
-* Filename: algorithm.cpp
-* Description: This module calculates the heart rate/SpO2 level
-*
-*
-* --------------------------------------------------------------------
-*
-* This code follows the following naming conventions:
-*
-* char              ch_pmod_value
-* char (array)      s_pmod_s_string[16]
-* float             f_pmod_value
-* int32_t           n_pmod_value
-* int32_t (array)   an_pmod_value[16]
-* int16_t           w_pmod_value
-* int16_t (array)   aw_pmod_value[16]
-* uint16_t          uw_pmod_value
-* uint16_t (array)  auw_pmod_value[16]
-* uint8_t           uch_pmod_value
-* uint8_t (array)   auch_pmod_buffer[16]
-* uint32_t          un_pmod_value
-* int32_t *         pn_pmod_value
-*
-* ------------------------------------------------------------------------- */
-/*******************************************************************************
-* Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY CLAIM, DAMAGES
-* OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*
-* Except as contained in this notice, the name of Maxim Integrated
-* Products, Inc. shall not be used except as stated in the Maxim Integrated
-* Products, Inc. Branding Policy.
-*
-* The mere transfer of this software does not imply any licenses
-* of trade secrets, proprietary technology, copyrights, patents,
-* trademarks, maskwork rights, or any other form of intellectual
-* property whatsoever. Maxim Integrated Products, Inc. retains all
-* ownership rights.
-*******************************************************************************
+/*
+  ******************************************************************************
+  * @file    esperto_mxa30102_spo2.cpp
+  * @author  Daniel De Sousa
+  * @version V2.0.0
+  * @date    12-August-2018
+  * @brief  
+  ******************************************************************************
 */
 
 #include "arduino.h"
 #include "esperto_max30102_spo2.h"
 
-#if defined(ARDUINO_AVR_UNO)
-//Arduino Uno doesn't have enough SRAM to store 100 samples of IR led data and red led data in 32-bit format
-//To solve this problem, 16-bit MSB of the sampled data will be truncated.  Samples become 16-bit data.
-void maxim_heart_rate_and_oxygen_saturation(uint16_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint16_t *pun_red_buffer, int32_t *pn_spo2, int8_t *pch_spo2_valid, 
-                int32_t *pn_heart_rate, int8_t *pch_hr_valid)
-#else
-void maxim_heart_rate_and_oxygen_saturation(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun_red_buffer, int32_t *pn_spo2, int8_t *pch_spo2_valid, 
-                int32_t *pn_heart_rate, int8_t *pch_hr_valid)
-#endif
 /**
-* \brief        Calculate the heart rate and SpO2 level
+* \brief        Calculate Spo2
 * \par          Details
 *               By detecting  peaks of PPG cycle and corresponding AC/DC of red/infra-red signal, the an_ratio for the SPO2 is computed.
 *               Since this algorithm is aiming for Arm M0/M3. formaula for SPO2 did not achieve the accuracy due to register overflow.
@@ -81,11 +23,10 @@ void maxim_heart_rate_and_oxygen_saturation(uint32_t *pun_ir_buffer, int32_t n_i
 * \param[in]    *pun_red_buffer          - Red sensor data buffer
 * \param[out]    *pn_spo2                - Calculated SpO2 value
 * \param[out]    *pch_spo2_valid         - 1 if the calculated SpO2 value is valid
-* \param[out]    *pn_heart_rate          - Calculated heart rate value
-* \param[out]    *pch_hr_valid           - 1 if the calculated heart rate value is valid
 *
 * \retval       None
 */
+void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun_red_buffer, int32_t *pn_spo2, int8_t *pch_spo2_valid)
 {
   uint32_t un_ir_mean,un_only_once ;
   int32_t k, n_i_ratio_count;
@@ -127,16 +68,6 @@ void maxim_heart_rate_and_oxygen_saturation(uint32_t *pun_ir_buffer, int32_t n_i
   // since we flipped signal, we use peak detector as valley detector
   maxim_find_peaks( an_ir_valley_locs, &n_npks, an_x, BUFFER_SIZE, n_th1, 4, 15 );//peak_height, peak_distance, max_num_peaks 
   n_peak_interval_sum =0;
-  if (n_npks>=2){
-    for (k=1; k<n_npks; k++) n_peak_interval_sum += (an_ir_valley_locs[k] -an_ir_valley_locs[k -1] ) ;
-    n_peak_interval_sum =n_peak_interval_sum/(n_npks-1);
-    *pn_heart_rate =(int32_t)( (FS*60)/ n_peak_interval_sum );
-    *pch_hr_valid  = 1;
-  }
-  else  { 
-    *pn_heart_rate = -999; // unable to calculate because # of peaks are too small
-    *pch_hr_valid  = 0;
-  }
 
   //  load raw value again for SPO2 calculation : RED(=y) and IR(=X)
   for (k=0 ; k<n_ir_buffer_length ; k++ )  {
