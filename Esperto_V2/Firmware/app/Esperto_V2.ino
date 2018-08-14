@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.0.3
-  * @date    09-Aug-2018
+  * @version V2.0.5
+  * @date    13-Aug-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: Add MCU standby feature
+  * @note    Last revision: Added SpO2 functionality
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -28,8 +28,15 @@ uint8_t bleRXBbufferLen = 0;
 uint8_t bleConnectionState = false;
 
 // Heart Rate Variables
-int heartRateAvg; // average heart rate which will we be displayed
-#define IR_STANDBY_THRESH 50000 // IR min for device to go into standy mode
+int heartRateAvg;                 // average heart rate which will we be displayed
+uint16_t spO2Avg;                 // average SpO2 which will be stored, displayed, and sent
+#define IR_STANDBY_THRESH 50000   // IR min for device to go into standy mode
+#define STANDBY_TIMEOUT 30        // 30 secconds - device goes into standby mode every 30s if no presence
+#define SPO2_LIGHT_BUF_LENGTH 100 // length of infrared and red light buffers
+#define SPO2_BUF_LENGTH 10        // length of buffer containing last calculated SpO2 values
+#define HEARTRATE_MIN_VALID 40    // minimum heart rate value which is considered valid
+#define HEARTRATE_MAX_VALID 200   // maximum heart rate value which is considered valid
+#define SPO2_MIN_VALID 80         // minimum SpO2 value which is considered valid
 
 // MPU9250
 uint16_t stepCount = 0;       // total number of steps taken
@@ -65,8 +72,7 @@ SAMDtimer timer3_1Hz = SAMDtimer(3, ISR_timer3, 1e6); // 1Hz timer interrupt
 float inputVoltage;                   // input voltage measured (USB, battery) 
 
 // Bootloader setup
-void setup()
-{
+void setup(){
   // Used for debugging purposes
   SerialUSB.begin(9600);
   
@@ -98,8 +104,7 @@ void setup()
 
 // Function to update the display with latest information
 // Display is updated at 1HZ or when a BLE message is recieved
-void updateDisplay()
-{
+void updateDisplay(){
   // if there is an incoming phone call
   if (strlen(callBT) >= 10 && bleConnectionState == true)
   {
@@ -201,8 +206,7 @@ void updateDisplay()
 }
 
 // Set Real Time Clock time
-void setRTCTime()
-{
+void setRTCTime(){
   // set time (HH:MM:SS) - 24 hour clock
   rtc.setHours(stringToByte(timeBT, 2));
   rtc.setMinutes(stringToByte(timeBT+3, 2));
@@ -210,8 +214,7 @@ void setRTCTime()
 }
 
 // Set Real Time Clock date
-void setRTCDate()
-{
+void setRTCDate(){
   // set date (DD/MM/YYYY)
   rtc.setDay(stringToByte(dateBT, 2));
   rtc.setMonth(stringToByte(dateBT+3, 2));
@@ -219,24 +222,22 @@ void setRTCDate()
 }
 
 // Write data to FRAM
-void writeFRAM()
-{
-  // Ensure memory is not full
-  if(countFRAM < FRAM_SIZE)
+void writeFRAM(){
+  // Ensure memory is not full and sensor data is valid
+  if(countFRAM < FRAM_SIZE && heartRateAvg > HEARTRATE_MIN_VALID)
   {
      fram.write8(countFRAM, heartRateAvg);
      fram.write8(countFRAM+1, (stepCount + dmpStepCount) >> 8);
      fram.write8(countFRAM+2, (stepCount + dmpStepCount));
-     fram.write8(countFRAM+3, 0);
-     countFRAM+=4; // 4 byte alligned 
+     fram.write8(countFRAM+3, spO2Avg);
+     countFRAM+=4; // 4 byte alligned memory
   }
   // New data written to FRAM - reset flag
   isDataSent = 0;
 }
 
 // Burst transfer data found in FRAM once connected to BLE device
-void burstTransferFRAM()
-{
+void burstTransferFRAM(){
   uint8_t blePacket[20];
   int i, j;
   
@@ -254,13 +255,50 @@ void burstTransferFRAM()
   isDataSent = true;
 }
 
+void calculateSpO2(uint32_t irValue){
+    static uint32_t irBuffer[SPO2_LIGHT_BUF_LENGTH];  // infrared sensor buffer
+    static uint32_t redBuffer[SPO2_LIGHT_BUF_LENGTH]; // red sensor buffer
+    static uint8_t senseBufIndex = 0;                 // index used to determine where latest vals will be assigned in buf
+    static uint8_t spO2Buf[SPO2_BUF_LENGTH];          // buffer containing latest valid SpO2 values
+    static int8_t sp02BufIndex = 0;                   // index used to determine where latest SpO2 will be assigned in buf
+    int32_t spo2;                                     // current SpO2 value
+    int8_t validSPO2;                                 // boolean indicator to show if the SpO2 calculation is valid
+
+    // assign new data points to sensor buffers
+    redBuffer[senseBufIndex] = heartRateSensor.getRed();
+    irBuffer[senseBufIndex] = irValue;
+    
+    // increase current buffer index
+    senseBufIndex++;
+    senseBufIndex%=SPO2_LIGHT_BUF_LENGTH;
+
+    // after gathering 25 new samples, recalculate SP02
+    if(senseBufIndex%25 == 0)
+    {
+        // calculate SpO2 and check if valid
+        calcSpO2(irBuffer, SPO2_LIGHT_BUF_LENGTH, redBuffer, &spo2, &validSPO2);
+        if(validSPO2 && spo2 > SPO2_MIN_VALID){
+            // assign to valid SpO2 array
+            spO2Buf[sp02BufIndex] = spo2;
+            sp02BufIndex++;
+            sp02BufIndex%=SPO2_BUF_LENGTH;
+            spO2Avg = 0;
+            
+            // determine average SpO2
+            for(int i = 0; i < SPO2_BUF_LENGTH; i++){
+              spO2Avg += spO2Buf[i];
+            }
+            spO2Avg/=SPO2_BUF_LENGTH;
+        }
+    }
+}
+
 // Calculate users heart rate
-void calculateHR()
-{
+void calculateHR(){
   static uint8_t heartRates[ARRAY_SIZE_HR];   // array containing latest HR values
   static uint8_t heartRateIndex = 0;          // index latest value was inputted into array
   static uint32_t prevHeartBeat = 0;          // time at which the last heart beat occurred
-  static long timeLastHRBeat = 0;             // last time valid heart rate was calculated
+  static uint32_t timeLastHRBeat = 0;             // last time valid heart rate was calculated
 
   // Check if valid time - LPF
   if(millis()-timeLastHRBeat < 500)
@@ -269,11 +307,11 @@ void calculateHR()
   }
   
   // obtain infrared value
-  long irValue = heartRateSensor.getIR();
+  uint32_t irValue = heartRateSensor.getIR();
 
   // if presence is not detected on sensor, go into standby mode
   // Note: ISR_CTR is used in case user wants to check time but not wear device
-  if(irValue < IR_STANDBY_THRESH && (ISR_CTR%10 == 0))
+  if(irValue < IR_STANDBY_THRESH && (ISR_CTR%STANDBY_TIMEOUT == 0))
   {
       // shutdown display and heart rate sensor
       u8g2.setPowerSave(PERIPH_SHUTDOWN); 
@@ -281,7 +319,7 @@ void calculateHR()
 
       // enable motion on wake up interrupt
       imu.enableMotionWakeup(MOTION_WAKE_THRESH, WAKEUP_FREQ);
-      
+
       // wait on motion interrupt
       while(digitalRead(INTERRUPT_PIN) != LOW){}
 
@@ -303,8 +341,8 @@ void calculateHR()
     // use the difference to calculate the heart rate
     float heartRate = 60 / (heartBeatTimeDiff / 1000.0); // 60 s in 1 min, 1000 ms in 1 s
 
-    // only use valid heart rates between 40 and 120 bpm
-    if (heartRate < 120 && heartRate > 40)
+    // only use valid heart rates
+    if (heartRate < HEARTRATE_MAX_VALID && heartRate > HEARTRATE_MIN_VALID)
     {
       // store heart rate
       heartRates[heartRateIndex++] = heartRate;
@@ -320,11 +358,13 @@ void calculateHR()
       timeLastHRBeat = millis();
     }
   }
+
+  // Calculate SpO2 - pass in IR value so we do not have to retrieve it again
+  calculateSpO2(irValue);
 }
 
 // Calculate steps based on gyroscope values
-void countSteps()
-{
+void countSteps(){
   static float stepMax = 0; // peak of gyration data
   static float stepMin = 0; // trough of gyration data
   static float gyroData[3]; // array storing recent gyration readings
@@ -374,8 +414,7 @@ void countSteps()
   }
 }
 
-void alarmInterrupt()
-{
+void alarmInterrupt(){
   // Do nothing
 }
 
@@ -418,8 +457,7 @@ void powerManage(){
 }
 
 // Main loop function
-void loop()
-{
+void loop(){
   static bool deviceInit = 0; // prevents time showing up without initial BLE connection
   
   // Process any ACI commands or events from BLE
@@ -464,7 +502,7 @@ void loop()
   }
 
   // Check to see if notifications need to be cleared - add NULL terminator
-  if(notifCounter == NOTIF_COUNTER_MAX){
+  if(notifCounter >= NOTIF_COUNTER_MAX){
     callBT[0] = '\0';
     textBT[0] = '\0';
   }
@@ -496,23 +534,22 @@ void loop()
     writeFRAM();
     ISR_CTR = 0;
   }
-  // Write to BLE every 30 seconds
-  else if(ISR_CTR >= 30 && bleConnectionState)
+  // Write to BLE every 30 seconds if connected and data is valid
+  else if(ISR_CTR >= 30 && bleConnectionState && heartRateAvg > HEARTRATE_MIN_VALID)
   {
     // Compile packet
     uint8_t txBuf[4];
     txBuf[0] = heartRateAvg;
     txBuf[1] = (stepCount+dmpStepCount) >> 8;
     txBuf[2] = (stepCount+dmpStepCount);
-    txBuf[3] = 0;
+    txBuf[3] = spO2Avg;
     writeUARTTX((char*)txBuf, 4);
     ISR_CTR = 0;
   }
 }
 
 // Initialize MPU-9250
-void initMPU9250()
-{
+void initMPU9250(){
   // Verify communication and init default values
   imu.begin();
 
@@ -535,8 +572,7 @@ void initMPU9250()
 }
 
 // Initializes BLE and puts it into peripheral mode
-void BLEsetup()
-{
+void BLEsetup(){
   HCI_Init();
   //Init SPI interface
   BNRG_SPI_Init();
@@ -574,21 +610,18 @@ void bleProcess() {
 }
 
 // Write to BLE using UART service
-void writeUARTTX(char* TXdata, uint8_t datasize)
-{
+void writeUARTTX(char* TXdata, uint8_t datasize){
   aci_gatt_update_char_value(UARTServHandle, UARTRXCharHandle, 0, datasize, (uint8_t *)TXdata);
 }
 
 // Recursive Infinite Impulse Response filter
-float iirFilter(float iir_Av, int val)
-{
+float iirFilter(float iir_Av, int val){
   iir_Av = iir_Av + ((float)val - iir_Av)/16;
   return iir_Av;
 }
 
 // Add UART services and characteristics
-void Add_UART_Service(void)
-{
+void Add_UART_Service(void){
   uint8_t uuid[16];
 
   COPY_UART_SERVICE_UUID(uuid);
@@ -604,8 +637,7 @@ void Add_UART_Service(void)
 }
 
 // Connect and disconnect to BLE device
-void setConnectable(void)
-{
+void setConnectable(void){
   // Set device to connectable
   const char local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME, 'E', 's', 'p', 'e', 'r', 't', 'o'};
   hci_le_set_scan_resp_data(0, NULL);
@@ -616,8 +648,7 @@ void setConnectable(void)
 }
 
 // Recieve BLE data
-void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data)
-{
+void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data){
   if (handle == UARTTXCharHandle + 1) {
     int i;
     for (i = 0; i < data_length; i++) {
@@ -629,8 +660,7 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
 }
 
 // Process BLE message
-void HCI_Event_CB(void *pckt)
-{
+void HCI_Event_CB(void *pckt){
   static uint16_t connectionHandle = 0;
   
   hci_uart_pckt *hci_pckt = (hci_uart_pckt *)pckt;
@@ -691,8 +721,7 @@ void HCI_Event_CB(void *pckt)
 }
 
 // Convert a number in a char array to a byte data type
-byte stringToByte(char *src, int numBytes)
-{
+byte stringToByte(char *src, int numBytes){
   char charBuffer[4];
   memcpy(charBuffer, src, numBytes);
   return (byte)atoi(charBuffer);
