@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.0.5
-  * @date    13-Aug-2018
+  * @version V2.0.6
+  * @date    15-Aug-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: Added SpO2 functionality
+  * @note    Last revision: Timer refactoring
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -18,61 +18,48 @@
 #include <U8g2lib.h>
 
 // BLE variables
-char dateBT[INFO_BUFFER_SIZE]; // date info MM/DD/YYYY
-char timeBT[INFO_BUFFER_SIZE]; // time info HH:MM:SS MM
-char callBT[INFO_BUFFER_SIZE]; // caller number info
-char textBT[INFO_BUFFER_SIZE]; // text number info
-volatile uint8_t notifCounter = 0;
-uint8_t bleRXBuffer[BLE_DATA_SIZE];
-uint8_t bleRXBbufferLen = 0;
-uint8_t bleConnectionState = false;
+char dateBT[INFO_BUFFER_SIZE];      // Date info MM/DD/YYYY
+char timeBT[INFO_BUFFER_SIZE];      // Time info HH:MM:SS MM
+char callBT[INFO_BUFFER_SIZE];      // Caller number info
+char textBT[INFO_BUFFER_SIZE];      // Text number info
+uint8_t bleRXBuffer[BLE_DATA_SIZE]; // Buffer containing incoming BLE data
+uint8_t bleRXBbufferLen = 0;        // Size of incoming data
+uint8_t bleConnectionState = false; // Status of BLE connection
 
 // Heart Rate Variables
-int heartRateAvg;                 // average heart rate which will we be displayed
-uint16_t spO2Avg;                 // average SpO2 which will be stored, displayed, and sent
-#define IR_STANDBY_THRESH 50000   // IR min for device to go into standy mode
-#define STANDBY_TIMEOUT 30        // 30 secconds - device goes into standby mode every 30s if no presence
-#define SPO2_LIGHT_BUF_LENGTH 100 // length of infrared and red light buffers
-#define SPO2_BUF_LENGTH 10        // length of buffer containing last calculated SpO2 values
-#define HEARTRATE_MIN_VALID 40    // minimum heart rate value which is considered valid
-#define HEARTRATE_MAX_VALID 200   // maximum heart rate value which is considered valid
-#define SPO2_MIN_VALID 80         // minimum SpO2 value which is considered valid
+int heartRateAvg; // Average heart rate which will we be displayed
+uint16_t spO2Avg; // Average SpO2 which will be stored, displayed, and sent
 
 // MPU9250
-uint16_t stepCount = 0;       // total number of steps taken
-uint16_t dmpStepCount = 0;    // total number of steps taken calculated by the Digital Motion Processor
-#define MOTION_WAKE_THRESH 10 // 10mg - acceleration at which a motion wakeup occurs
-#define WAKEUP_FREQ 7         // 7 = 31.25 Hz - frequency at which the MPU wakes up to read accelerometer
-#define INTERRUPT_PIN 7       // Digital 7 - connected to MPU interrupt pin
+uint16_t stepCount = 0;    // Total number of steps taken
+uint16_t dmpStepCount = 0; // Total number of steps taken calculated by the Digital Motion Processor
 
-// FRAM Variables
-#define FRAM_SIZE 32768 // in bytes
-uint16_t countFRAM = 0; // stores the address which is going to be used by the FRAM
-bool isDataSent = 0;    // Determines if initial data was sent for the current BLE connection
+// FRAM Definitions
+uint16_t countFRAM = 0;  // Address where the latest data will be written to in the FRAM
+bool isDataSent = 0;     // Determines if initial data was sent for the current BLE connection
 
 // 1Hz Timer ISR -- 1Hz timer which times writing to FRAM, BLE, display
-volatile uint8_t ISR_CTR = 0;                        // 1 second timer - used by memory peripheral to write every x seconds
-volatile bool updateDisplay_flag = 0;                // control when display is updated
+volatile uint8_t ISR_CTR = 0;         // General 1 second counter
+volatile uint8_t STANDBY_CTR = 0;     // How many seconds the device has not been in standby mode
+volatile uint8_t NOTIF_CTR = 0;       // Number of seconds notifications have shown on screen
+volatile uint8_t DATA_CTR = 0;        // Track how many seconds between data writes
+volatile bool updateDisplay_flag = 0; // Control when display is updated
 void ISR_timer3(struct tc_module *const module_inst) 
 { 
-  ISR_CTR = ISR_CTR + 1;
-  notifCounter = notifCounter + 1;
-  updateDisplay_flag = 1; // Update display
+  ISR_CTR++;
+  STANDBY_CTR++;
+  NOTIF_CTR++;
+  DATA_CTR++;
+  updateDisplay_flag = 1; // Set flag to update display
 }
 SAMDtimer timer3_1Hz = SAMDtimer(3, ISR_timer3, 1e6); // 1Hz timer interrupt
 
 // Power management definitions
-#define CHARGE_PIN 3                  // digital 3: determine if charging is complete
-#define BATTERY_PIN 0                 // analog 0: determine when battery is low/high
-#define REFERENCE_VOLTAGE (3.3)       // the default reference voltage on a 3.3V mcu
-#define ADC_RESOLUTION (1023.0)       // 10 bit ADC
-#define VOLTAGE_SHUTDOWN_THRESH (3.5) // Voltage at which peripherals / mcu will go to sleep
-#define PERIPH_SHUTDOWN 1             // Shutdown peripheral
-#define PERIPH_WAKEUP 0               // Wakeup peripheral
-float inputVoltage;                   // input voltage measured (USB, battery) 
+float inputVoltage; // Input voltage measured (USB, battery) 
 
 // Bootloader setup
 void setup(){
+  
   // Used for debugging purposes
   SerialUSB.begin(9600);
   
@@ -105,7 +92,7 @@ void setup(){
 // Function to update the display with latest information
 // Display is updated at 1HZ or when a BLE message is recieved
 void updateDisplay(){
-  // if there is an incoming phone call
+  // Check if there is an incoming phone call
   if (strlen(callBT) >= 10 && bleConnectionState == true)
   {
     u8g2.setFont(u8g2_font_profont11_tf);
@@ -118,40 +105,43 @@ void updateDisplay(){
     u8g2.print("Call");
     u8g2.drawStr(0, 58, callBT);
   }
-  // if there is an incoming text
+  // Check if there is an incoming text
   else if (strlen(textBT) >= 10 && bleConnectionState == true)
   {
     u8g2.setFont(u8g2_font_profont11_tf);
-    // print time top left corner
+    
+    // Print time top left corner
     u8g2.drawStr(0, 10, timeBT);
 
     u8g2.setFont(u8g2_font_profont22_tf);
-    // display text text and phone number
+    
+    // Display text text and phone number
     u8g2.setCursor(40, 38);
     u8g2.print("Text");
     u8g2.drawStr(0, 58, textBT);
   }
-  // if no incoming call or text
+  // If no incoming call or text
   else
   {
     u8g2.setFont(u8g2_font_profont11_tf);
-    // display date
+    
+    // Display date
     u8g2.setCursor(0, 10);
     u8g2.print(String(rtc.getMonth()) + "/" + String(rtc.getDay()) + "/20" + String(rtc.getYear()));
 
-    // display heart rate
+    // Display heart rate
     u8g2.drawXBMP(0, 54, 10, 10, heart);
     if(heartRateAvg > 40){
       u8g2.setCursor(14, 62);
       u8g2.print(String(heartRateAvg) + " bpm");
     }
 
-    // display steps
+    // Display steps
     u8g2.setCursor(78, 62);
     u8g2.print(String((stepCount + dmpStepCount)) + " stp");
     u8g2.drawXBMP(64, 54, 10, 10, mountain);
     
-    // display time
+    // Display time
     u8g2.setFont(u8g2_font_profont22_tf);
     // Convert time from 24 hour clock to meridian time
     uint8_t hour = rtc.getHours();
@@ -159,22 +149,22 @@ void updateDisplay(){
       u8g2.setCursor(13, 38);
       if(hour > 12)
         hour = hour - 12;
-      // time does not come with leading 0's, add to display string if needed
+      // Add leading 0's to display string if needed
       if(rtc.getMinutes() < 10)
         u8g2.print(String(hour) + ":0" + String(rtc.getMinutes()) + " PM");
       else
         u8g2.print(String(hour) + ":" + String(rtc.getMinutes()) + " PM");
     }
     else{
-      // in case it is 12AM - we do not want 0 showing up as the hour
+      // In case it is 12AM - we do not want 0 showing up as the hour
       if(hour == 0)
         hour = 12;
-      // determine position of time based on how many digits
+      // Determine position of time based on how many digits
       if(hour >= 10)
         u8g2.setCursor(13, 38);
       else
         u8g2.setCursor(20, 38);
-      // time does not come with leading 0's, add to display string if needed
+      // Add leading 0's to display string if needed
       if(rtc.getMinutes() < 10)
         u8g2.print(String(hour) + ":0" + String(rtc.getMinutes()) + " AM");
       else
@@ -182,16 +172,16 @@ void updateDisplay(){
     }
   }
   
-  // draw BT logo only if connected
+  // Draw BT logo only if connected
   if(bleConnectionState == true)
     u8g2.drawXBMP(118, 0, 10, 10, BT);
 
-  // display battery status
+  // Display battery status
   bool isChargeComplete = digitalRead(CHARGE_PIN); // HIGH when charging is complete
-  // display full battery
+  // Display full battery
   if ((inputVoltage >= 3.5 && inputVoltage <= 4.5) || isChargeComplete)
     u8g2.drawXBMP(105, 0, 10, 10, battHigh);
-  // display charging battery - toggle when charging
+  // Display charging battery - toggle when charging
   else if (inputVoltage > 4.5 && !isChargeComplete){
     if(ISR_CTR%3 == 0)
       u8g2.drawXBMP(105, 0, 10, 10, battLow);
@@ -200,14 +190,14 @@ void updateDisplay(){
     else
       u8g2.drawXBMP(105, 0, 10, 10, battHigh);
   }
-  // display low battery
+  // Display low battery
   else if (inputVoltage < 3.5)
     u8g2.drawXBMP(105, 0, 10, 10, battLow);
 }
 
 // Set Real Time Clock time
 void setRTCTime(){
-  // set time (HH:MM:SS) - 24 hour clock
+  // Det time (HH:MM:SS) - 24 hour clock
   rtc.setHours(stringToByte(timeBT, 2));
   rtc.setMinutes(stringToByte(timeBT+3, 2));
   rtc.setSeconds(stringToByte(timeBT+6, 2));
@@ -215,7 +205,7 @@ void setRTCTime(){
 
 // Set Real Time Clock date
 void setRTCDate(){
-  // set date (DD/MM/YYYY)
+  // Det date (DD/MM/YYYY)
   rtc.setDay(stringToByte(dateBT, 2));
   rtc.setMonth(stringToByte(dateBT+3, 2));
   rtc.setYear(stringToByte(dateBT+8, 2)); // only get the last two digits of the year
@@ -264,27 +254,27 @@ void calculateSpO2(uint32_t irValue){
     int32_t spo2;                                     // current SpO2 value
     int8_t validSPO2;                                 // boolean indicator to show if the SpO2 calculation is valid
 
-    // assign new data points to sensor buffers
+    // Assign new data points to sensor buffers
     redBuffer[senseBufIndex] = heartRateSensor.getRed();
     irBuffer[senseBufIndex] = irValue;
     
-    // increase current buffer index
+    // Increase current buffer index
     senseBufIndex++;
     senseBufIndex%=SPO2_LIGHT_BUF_LENGTH;
 
-    // after gathering 25 new samples, recalculate SP02
+    // After gathering 25 new samples, recalculate SP02
     if(senseBufIndex%25 == 0)
     {
-        // calculate SpO2 and check if valid
+        // Calculate SpO2 and check if valid
         calcSpO2(irBuffer, SPO2_LIGHT_BUF_LENGTH, redBuffer, &spo2, &validSPO2);
         if(validSPO2 && spo2 > SPO2_MIN_VALID){
-            // assign to valid SpO2 array
+            // Assign to valid SpO2 array
             spO2Buf[sp02BufIndex] = spo2;
             sp02BufIndex++;
             sp02BufIndex%=SPO2_BUF_LENGTH;
             spO2Avg = 0;
             
-            // determine average SpO2
+            // Determine average SpO2
             for(int i = 0; i < SPO2_BUF_LENGTH; i++){
               spO2Avg += spO2Buf[i];
             }
@@ -295,10 +285,10 @@ void calculateSpO2(uint32_t irValue){
 
 // Calculate users heart rate
 void calculateHR(){
-  static uint8_t heartRates[ARRAY_SIZE_HR];   // array containing latest HR values
-  static uint8_t heartRateIndex = 0;          // index latest value was inputted into array
-  static uint32_t prevHeartBeat = 0;          // time at which the last heart beat occurred
-  static uint32_t timeLastHRBeat = 0;             // last time valid heart rate was calculated
+  static uint8_t heartRates[ARRAY_SIZE_HR];   // Array containing latest valid HR values
+  static uint8_t heartRateIndex = 0;          // Index where latest latest value will be assigned into array
+  static uint32_t prevHeartBeat = 0;          // Time at which the last heart beat occurred
+  static uint32_t timeLastHRBeat = 0;         // Last time valid heart rate was calculated
 
   // Check if valid time - LPF
   if(millis()-timeLastHRBeat < 500)
@@ -306,68 +296,78 @@ void calculateHR(){
       return;
   }
   
-  // obtain infrared value
+  // Obtain infrared value
   uint32_t irValue = heartRateSensor.getIR();
 
-  // if presence is not detected on sensor, go into standby mode
-  // Note: ISR_CTR is used in case user wants to check time but not wear device
-  if(irValue < IR_STANDBY_THRESH && (ISR_CTR%STANDBY_TIMEOUT == 0))
+  // If presence is not detected on sensor, go into standby mode
+  // Note: STANDBY_CTR is used in case user wants to check time but not wear device
+  if(irValue < IR_STANDBY_THRESH && (STANDBY_CTR >= STANDBY_TIMEOUT))
   {
-      // shutdown display and heart rate sensor
+      // Shutdown display and heart rate sensor
       u8g2.setPowerSave(PERIPH_SHUTDOWN); 
       heartRateSensor.shutDown();
 
-      // enable motion on wake up interrupt
+      // Enable motion on wake up interrupt
       imu.enableMotionWakeup(MOTION_WAKE_THRESH, WAKEUP_FREQ);
 
-      // wait on motion interrupt
+      // Wait on motion interrupt
       while(digitalRead(INTERRUPT_PIN) != LOW){}
 
-      // disable interrupt and turn on peripherals
+      // Disable interrupt and turn on peripherals
       imu.disableMotionWakeup();
       u8g2.setPowerSave(PERIPH_WAKEUP); 
       heartRateSensor.wakeUp();
 
+      // Reset standby counter
+      STANDBY_CTR = 0;
+      
       return;
   }
-
-  // if heart beat was detected
-  else if (checkForBeat(irValue))
+  // Check if valid IR value being used
+  else if(irValue > IR_STANDBY_THRESH)
   {
-    // calculate time difference between 2 beats
-    uint32_t heartBeatTimeDiff = millis() - prevHeartBeat;
-    prevHeartBeat = millis();
-
-    // use the difference to calculate the heart rate
-    float heartRate = 60 / (heartBeatTimeDiff / 1000.0); // 60 s in 1 min, 1000 ms in 1 s
-
-    // only use valid heart rates
-    if (heartRate < HEARTRATE_MAX_VALID && heartRate > HEARTRATE_MIN_VALID)
+    // Check if heart beat was detected
+    if (checkForBeat(irValue))
     {
-      // store heart rate
-      heartRates[heartRateIndex++] = heartRate;
-      heartRateIndex %= ARRAY_SIZE_HR; // use modulus op. to determine current index
+      // Calculate time difference between 2 beats
+      uint32_t heartBeatTimeDiff = millis() - prevHeartBeat;
+      prevHeartBeat = millis();
+  
+      // Use the difference to calculate the heart rate
+      float heartRate = 60 / (heartBeatTimeDiff / 1000.0); // 60 s in 1 min, 1000 ms in 1 s
+  
+      // Only use valid heart rates
+      if (heartRate < HEARTRATE_MAX_VALID && heartRate > HEARTRATE_MIN_VALID)
+      {
+        // Store heart rate
+        heartRates[heartRateIndex++] = heartRate;
+        heartRateIndex %= ARRAY_SIZE_HR; // use modulus op. to determine current index
+  
+        // Calcute average heart rate
+        heartRateAvg = 0; // reset
+        for (int i = 0; i < ARRAY_SIZE_HR; i++){
+          heartRateAvg += heartRates[i]; // add up all heart rates
+        }
+        heartRateAvg /= ARRAY_SIZE_HR; // determine average by dividing by size of array
 
-      // calcute average heart rate
-      heartRateAvg = 0; // reset
-      for (int i = 0; i < ARRAY_SIZE_HR; i++){
-        heartRateAvg += heartRates[i]; // add up all heart rates
+        // Obtain current time
+        timeLastHRBeat = millis();
       }
-      heartRateAvg /= ARRAY_SIZE_HR; // determine average by dividing by size of array
-
-      timeLastHRBeat = millis();
     }
-  }
+    
+    // Calculate SpO2 - pass in IR value so we do not have to retrieve it again
+    calculateSpO2(irValue);
 
-  // Calculate SpO2 - pass in IR value so we do not have to retrieve it again
-  calculateSpO2(irValue);
+    // Reset standby counter
+    STANDBY_CTR = 0;
+  }
 }
 
 // Calculate steps based on gyroscope values
 void countSteps(){
-  static float stepMax = 0; // peak of gyration data
-  static float stepMin = 0; // trough of gyration data
-  static float gyroData[3]; // array storing recent gyration readings
+  static float stepMax = 0; // Peak of gyration data
+  static float stepMin = 0; // Trough of gyration data
+  static float gyroData[3]; // Array storing recent gyration readings
   static float iir_Av = 0;  // IIR value
 
   // Check for new data in the MPU9250 FIFO
@@ -381,33 +381,33 @@ void countSteps(){
     return; // break out of function
   }
 
-  // obtain recent gyro values
+  // Obtain recent gyro values
   float gyroX = imu.calcGyro(imu.gx);
   float gyroY = imu.calcGyro(imu.gy);
   float gyroZ = imu.calcGyro(imu.gz);
 
-  // obtain magnitude of gyration and pass it through IIR filter
+  // Obtain magnitude of gyration and pass it through IIR filter
   float magGyration = sqrt(sq(gyroX) + sq(gyroY) + sq(gyroZ));
   iir_Av = iirFilter(iir_Av, (int) magGyration);
 
-  // update recent quaternion values
+  // Update recent valid gyro values
   gyroData[0] = gyroData[1];
   gyroData[1] = gyroData[2];
   gyroData[2] = iir_Av; 
   
-  // if a peak/max is found - compare min to 100 to remove high freq data
-  if(gyroData[1] > gyroData[0] && gyroData[1] > gyroData[2] && stepMin < 100)
+  // If a peak/max is found - compare min to 100 to remove high freq data
+  if(gyroData[1] > gyroData[0] && gyroData[1] > gyroData[2] && stepMin < STEP_MIN_THRESH)
   {
     stepMax = gyroData[1];// update peak value      
     double maxMinDiff = stepMax - stepMin; 
-    // if a step is detected
+    // If a step is detected
     if (maxMinDiff > STEP_MIN_DIFF_THRESHOLD)
     {
         stepCount+=2; // increase by 2 as 2 steps were detected
         dmpStepCount = imu.dmpGetPedometerSteps();
     }
   }
-  // if a trough/min is found - 100 compared to reduce high freq noise
+  // If a trough/min is found
   else if(gyroData[1] < gyroData[0] && gyroData[1] < gyroData[2])
   {
     stepMin = gyroData[1];
@@ -458,7 +458,7 @@ void powerManage(){
 
 // Main loop function
 void loop(){
-  static bool deviceInit = 0; // prevents time showing up without initial BLE connection
+  static bool deviceInit = 0; // Prevents time showing up without initial BLE connection
   
   // Process any ACI commands or events from BLE
   bleProcess();
@@ -476,17 +476,17 @@ void loop(){
     }
     else if(strncmp((const char*)bleRXBuffer, "C", 1) == 0){
         strcpy(callBT, (const char*)bleRXBuffer+1);
-        notifCounter = 0;
+        NOTIF_CTR = 0;
     }
     else if(strncmp((const char*)bleRXBuffer, "M", 1) == 0){
         strcpy(textBT, (const char*)bleRXBuffer+1);
-        notifCounter = 0;
+        NOTIF_CTR = 0;
     }
 
-    //clear buffer afer reading
+    // Clear buffer afer reading
     bleRXBbufferLen = 0;
 
-    // update display
+    // Update display
     u8g2.firstPage();
     do {
       updateDisplay();
@@ -502,7 +502,7 @@ void loop(){
   }
 
   // Check to see if notifications need to be cleared - add NULL terminator
-  if(notifCounter >= NOTIF_COUNTER_MAX){
+  if(NOTIF_CTR >= NOTIF_COUNTER_MAX){
     callBT[0] = '\0';
     textBT[0] = '\0';
   }
@@ -529,13 +529,13 @@ void loop(){
   
   // Determine whether data is sent to FRAM or BLE
   // Write to FRAM every 30 seconds
-  if(ISR_CTR >= 30 && !bleConnectionState)
+  if(DATA_CTR >= DATA_INTERVAL && !bleConnectionState)
   {
     writeFRAM();
-    ISR_CTR = 0;
+    DATA_CTR = 0;
   }
   // Write to BLE every 30 seconds if connected and data is valid
-  else if(ISR_CTR >= 30 && bleConnectionState && heartRateAvg > HEARTRATE_MIN_VALID)
+  else if(DATA_CTR >= DATA_INTERVAL && bleConnectionState && heartRateAvg > HEARTRATE_MIN_VALID)
   {
     // Compile packet
     uint8_t txBuf[4];
@@ -544,7 +544,7 @@ void loop(){
     txBuf[2] = (stepCount+dmpStepCount);
     txBuf[3] = spO2Avg;
     writeUARTTX((char*)txBuf, 4);
-    ISR_CTR = 0;
+    DATA_CTR = 0;
   }
 }
 
