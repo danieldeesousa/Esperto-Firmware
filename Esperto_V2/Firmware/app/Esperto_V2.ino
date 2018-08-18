@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.0.6
-  * @date    15-Aug-2018
+  * @version V2.1.0
+  * @date    18-Aug-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: Timer refactoring
+  * @note    Last revision: 
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -35,14 +35,15 @@ uint16_t stepCount = 0;    // Total number of steps taken
 uint16_t dmpStepCount = 0; // Total number of steps taken calculated by the Digital Motion Processor
 
 // FRAM Definitions
-uint16_t countFRAM = 0;  // Address where the latest data will be written to in the FRAM
-bool isDataSent = 0;     // Determines if initial data was sent for the current BLE connection
+uint16_t countFRAM;  // Address where the latest data will be written to in the FRAM
+bool isDataSent = 0; // Determines if initial data was sent for the current BLE connection
 
 // 1Hz Timer ISR -- 1Hz timer which times writing to FRAM, BLE, display
-volatile uint8_t ISR_CTR = 0;         // General 1 second counter
-volatile uint8_t STANDBY_CTR = 0;     // How many seconds the device has not been in standby mode
-volatile uint8_t NOTIF_CTR = 0;       // Number of seconds notifications have shown on screen
-volatile uint8_t DATA_CTR = 0;        // Track how many seconds between data writes
+volatile uint16_t ISR_CTR = 0;         // General 1 second counter
+volatile uint16_t STANDBY_CTR = 0;     // How many seconds the device has not been in standby mode
+volatile uint16_t NOTIF_CTR = 0;       // Number of seconds notifications have shown on screen
+volatile uint16_t DATA_CTR = 0;        // Track how many seconds between data writes
+volatile uint16_t ACC_DISPLAY_CTR = 0; // How many seconds since the display was turned on due to no acceleration
 volatile bool updateDisplay_flag = 0; // Control when display is updated
 void ISR_timer3(struct tc_module *const module_inst) 
 { 
@@ -50,6 +51,7 @@ void ISR_timer3(struct tc_module *const module_inst)
   STANDBY_CTR++;
   NOTIF_CTR++;
   DATA_CTR++;
+  ACC_DISPLAY_CTR++;
   updateDisplay_flag = 1; // Set flag to update display
 }
 SAMDtimer timer3_1Hz = SAMDtimer(3, ISR_timer3, 1e6); // 1Hz timer interrupt
@@ -84,7 +86,11 @@ void setup(){
 
   // Initialize FRAM 
   fram.begin();
-  
+
+  // Obtain current amount of data stored in FRAM
+  countFRAM = fram.read8(FRAM_COUNT_ADDR_L);
+  countFRAM |= (fram.read8(FRAM_COUNT_ADDR_H) << 8);
+
   // Initialize STPBTLE-RF
   BLEsetup();
 }
@@ -222,6 +228,11 @@ void writeFRAM(){
      fram.write8(countFRAM+3, spO2Avg);
      countFRAM+=4; // 4 byte alligned memory
   }
+
+  // Write new FRAM count to first 2 bytes
+  fram.write8(FRAM_COUNT_ADDR_H, countFRAM >> 8);
+  fram.write8(FRAM_COUNT_ADDR_L, countFRAM);
+
   // New data written to FRAM - reset flag
   isDataSent = 0;
 }
@@ -231,7 +242,7 @@ void burstTransferFRAM(){
   uint8_t blePacket[20];
   int i, j;
   
-  for(i = 0; i < countFRAM; i+=20) // 20 byte packages
+  for(i = FRAM_DATA_BASE_ADDR; i < countFRAM; i+=20) // 20 byte packages
   {
     // Compile data packet
     for(j = 0; (j < 20) && ((i+j) < countFRAM); j++)
@@ -241,7 +252,13 @@ void burstTransferFRAM(){
     // TODO: Possibly fix - add intermediate display if too slow
     writeUARTTX((char*)blePacket, j);
   }
-  countFRAM = 0; // Go back to first FRAM address
+  countFRAM = FRAM_DATA_BASE_ADDR; // Go back to first FRAM address
+
+  // Write new FRAM count to first 2 bytes
+  fram.write8(FRAM_COUNT_ADDR_H, countFRAM >> 8);
+  fram.write8(FRAM_COUNT_ADDR_L, countFRAM);
+
+  // All data has been sent in FRAM
   isDataSent = true;
 }
 
@@ -371,14 +388,15 @@ void countSteps(){
   static float iir_Av = 0;  // IIR value
 
   // Check for new data in the MPU9250 FIFO
-  if ( !imu.fifoAvailable() )
+  if ( imu.dataReady() )
   {
-    return; // break out of function
+    // Update the imu objects sensor data
+    imu.update(UPDATE_ACCEL | UPDATE_GYRO);
   }
-  // Try to update accel and gyro values
-  if ( imu.dmpUpdateFifo() != INV_SUCCESS)
+  else
   {
-    return; // break out of function
+    // No data available
+    return;
   }
 
   // Obtain recent gyro values
@@ -412,12 +430,35 @@ void countSteps(){
   {
     stepMin = gyroData[1];
   }
+  
+  // Check if display should be on based on wrist movement
+  static uint32_t lastTimeAccel = millis();
+  float accelZ = imu.calcAccel(imu.az)*ACCEL_FACTOR;
+  
+  if(accelZ < ACCEL_Z_MIN || accelZ > ACCEL_Z_MAX)
+  {
+    // Ensure no BLE messages are ongoing before shutting down display
+    if(callBT[0] == '\0' && textBT[0] == '\0' && ACC_DISPLAY_CTR >= DISPLAY_TIMEOUT)
+    {
+      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+    }
+    lastTimeAccel = millis();
+  }
+  if(millis() - lastTimeAccel > ACCEL_FACTOR*DISPLAY_TIMEOUT)
+  {
+    // Turn on display and restart timer
+    if(ACC_DISPLAY_CTR >= DISPLAY_TIMEOUT)
+    {
+      u8g2.setPowerSave(PERIPH_WAKEUP); 
+    }
+    ACC_DISPLAY_CTR = 0;
+    lastTimeAccel = millis();
+  }
 }
 
 void alarmInterrupt(){
   // Do nothing
 }
-
 
 void powerManage(){
   // Read analog power inputs
@@ -476,14 +517,19 @@ void loop(){
     }
     else if(strncmp((const char*)bleRXBuffer, "C", 1) == 0){
         strcpy(callBT, (const char*)bleRXBuffer+1);
+        // Reset notification counter and turn on display
         NOTIF_CTR = 0;
+        u8g2.setPowerSave(PERIPH_WAKEUP); 
+        
     }
     else if(strncmp((const char*)bleRXBuffer, "M", 1) == 0){
         strcpy(textBT, (const char*)bleRXBuffer+1);
+        // Reset notification counter and turn on display
         NOTIF_CTR = 0;
+        u8g2.setPowerSave(PERIPH_WAKEUP); 
     }
 
-    // Clear buffer afer reading
+    // Clear buffer after reading
     bleRXBbufferLen = 0;
 
     // Update display
@@ -501,15 +547,16 @@ void loop(){
     deviceInit = 1; // Established initial BLE connection
   }
 
-  // Check to see if notifications need to be cleared - add NULL terminator
-  if(NOTIF_CTR >= NOTIF_COUNTER_MAX){
+  // Check to see if notifications need to be cleared - add NULL terminator and turn off display
+  if(NOTIF_CTR >= NOTIF_COUNTER_MAX && (strlen(callBT) >= 10 || strlen(textBT) >= 10)){
     callBT[0] = '\0';
     textBT[0] = '\0';
+    u8g2.setPowerSave(PERIPH_SHUTDOWN); 
   }
 
   // Update display
   if(updateDisplay_flag && deviceInit)
-  {    
+  {     
     // Check on power inputs
     powerManage();
     
@@ -521,12 +568,21 @@ void loop(){
     
     // Reset display flag
     updateDisplay_flag = 0;
+
+    // Reset steps everyday
+    if(rtc.getHours() == 0 && rtc.getMinutes() == 0 && rtc.getSeconds() <= 10)
+    {
+      // Reset local steps and DMP steps
+      stepCount = 0;
+      imu.dmpSetPedometerSteps(0);
+      imu.dmpSetPedometerTime(0);
+    }
   }
 
   // Calculate steps and heart rate
   countSteps();
   calculateHR(); 
-  
+
   // Determine whether data is sent to FRAM or BLE
   // Write to FRAM every 30 seconds
   if(DATA_CTR >= DATA_INTERVAL && !bleConnectionState)
@@ -556,6 +612,8 @@ void initMPU9250(){
   // Enable 3DOF gyro and acceleromter
   imu.setSensors(INV_XYZ_GYRO | INV_XYZ_ACCEL); 
   imu.setGyroFSR(2000); // Set gyro to 2000 dps
+  imu.setAccelFSR(2); // Set accel to +/-2g
+  imu.setLPF(5); // Set LPF corner frequency to 5Hz
 
   // Initialize gyro and step detection features
   unsigned short dmpFeatureMask = 0;
