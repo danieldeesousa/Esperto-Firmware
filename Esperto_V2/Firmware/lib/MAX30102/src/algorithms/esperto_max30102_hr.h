@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    esperto_max30102_hr.h
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    25-July-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief   Algorithm to detect heart beat using an implementation of the Peripheral Beat Algorithm
   ******************************************************************************
 */

@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    esperto_rtc.h
   * @author  Daniel De Sousa
-  * @version V2.0.1
-  * @date    16-July-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief   This library was developed for use with the SAM D21 to use the internal Real Time Clock
   * @note    Revision: Added alarm functionality
   ******************************************************************************

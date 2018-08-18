@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    esperto_mpu9250.h
   * @author  Daniel De Sousa
-  * @version V2.0.3
-  * @date    07-Aug-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief   MPU9250 Digital Motion Processor driver
   * @note    Revision: Motion wakeup
   ******************************************************************************

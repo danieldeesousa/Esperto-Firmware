@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    esperto_timer.cpp
   * @author  Daniel De Sousa
-  * @version V2.0.1
-  * @date    17-July-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief   
   * @note Last revision: Refactored ZeroTimer code into this file
   ******************************************************************************

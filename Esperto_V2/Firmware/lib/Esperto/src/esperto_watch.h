@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    esperto_watch.h
   * @author  Daniel De Sousa
-  * @version V2.0.5
-  * @date    15-August-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief   Main Esperto Watch library
-  * @note 	 Last revision: Added definitions
+  * @note 	 Last revision: Added accel-display detection
   ******************************************************************************
 */
 #ifndef __ESPERTO_WATCH_H
@@ -38,8 +38,11 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 #define SPO2_LIGHT_BUF_LENGTH 100 // Length of infrared and red light buffers
 
 // FRAM definitions
-#define FRAM_SIZE 32768  // Size of FRAM in Bytes
-#define DATA_INTERVAL 30 // Amount of time in seconds between data writes (Bluetooth and FRAM)
+#define FRAM_SIZE 32768       // Size of FRAM in Bytes
+#define FRAM_COUNT_ADDR_H 0   // Address of FRAM count MSB
+#define FRAM_COUNT_ADDR_L 1   // Address of FRAM count LSB
+#define FRAM_DATA_BASE_ADDR 4 // First address which data can be assigned to
+#define DATA_INTERVAL 30      // Amount of time in seconds between data writes (Bluetooth and FRAM)
 
 // Acceleromter definitions
 #define INTERRUPT_PIN 7            // Digital 7 - Connected to MPU interrupt pin
@@ -47,6 +50,13 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 #define STEP_MIN_THRESH 100        // Maximum value a gyration trough can be or else considered high freq noise
 #define MOTION_WAKE_THRESH 10      // 10mg - Acceleration at which a motion wakeup occurs
 #define WAKEUP_FREQ 7              // 7 = 31.25 Hz - Frequency at which the MPU wakes up to read accelerometer
+
+// Display-Acceleromter definitions
+// Note: these defintions are used for turning on display with wrist
+#define ACCEL_Z_MIN 500   // Minimum Z acceleration allowed for stable wrist after being multiplied by factor
+#define ACCEL_Z_MAX 900   // Maximum Z acceleration allowed for stable wrist after being multiplied by factor
+#define ACCEL_FACTOR 1000 // Factor to simplify calculations
+#define DISPLAY_TIMEOUT 3 // 3 second timeout used for hysterisis
 
 // Power management definitions
 #define CHARGE_PIN 3                  // Digital 3: determine if charging is complete

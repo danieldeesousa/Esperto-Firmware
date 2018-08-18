@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    esperto_watch_inc.h
   * @author  Daniel De Sousa
-  * @version V2.0.5
-  * @date    28-July-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief   Library inclusions and definiitions
   ******************************************************************************
 */

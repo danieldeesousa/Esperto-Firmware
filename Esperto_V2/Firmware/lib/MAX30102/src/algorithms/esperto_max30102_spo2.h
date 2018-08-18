@@ -3,8 +3,8 @@
   ******************************************************************************
   * @file    esperto_mxa30102_spo2.h
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    12-August-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief  
   ******************************************************************************
 */
@@ -13,12 +13,12 @@
 
 #include <arduino.h>
 
-#define FS 25    //sampling frequency
+#define FS 25    // Sampling frequency
 #define BUFFER_SIZE (FS * 4) 
 #define MA4_SIZE 4 // DONOT CHANGE
 #define min(x,y) ((x) < (y) ? (x) : (y))
 
-//uch_spo2_table is approximated as  -45.060*ratioAverage* ratioAverage + 30.354 *ratioAverage + 94.845 ;
+// uch_spo2_table is approximated as  -45.060*ratioAverage* ratioAverage + 30.354 *ratioAverage + 94.845 ;
 const uint8_t uch_spo2_table[184]={ 95, 95, 95, 96, 96, 96, 97, 97, 97, 97, 97, 98, 98, 98, 98, 98, 99, 99, 99, 99, 
               99, 99, 99, 99, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 
               100, 100, 100, 100, 99, 99, 99, 99, 99, 99, 99, 99, 98, 98, 98, 98, 98, 98, 97, 97, 

@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    hci_const.h
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    24-July-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief   This file defines constants and functions for the HCI layer
   ******************************************************************************
 */

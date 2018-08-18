@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    esperto_mxa30102_spo2.cpp
   * @author  Daniel De Sousa
-  * @version V2.0.0
-  * @date    12-August-2018
+  * @version V2.1.0
+  * @date    18-August-2018
   * @brief  
   ******************************************************************************
 */
@@ -42,12 +42,12 @@ void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun
   int32_t an_ratio[5], n_ratio_average; 
   int32_t n_nume, n_denom ;
 
-  // calculates DC mean and subtract DC from ir
+  // Calculates DC mean and subtract DC from ir
   un_ir_mean =0; 
   for (k=0 ; k<n_ir_buffer_length ; k++ ) un_ir_mean += pun_ir_buffer[k] ;
   un_ir_mean =un_ir_mean/n_ir_buffer_length ;
     
-  // remove DC and invert signal so that we can use peak detector as valley detector
+  // Remove DC and invert signal so that we can use peak detector as valley detector
   for (k=0 ; k<n_ir_buffer_length ; k++ )  
     an_x[k] = -1*(pun_ir_buffer[k] - un_ir_mean) ; 
     
@@ -55,7 +55,7 @@ void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun
   for(k=0; k< BUFFER_SIZE-MA4_SIZE; k++){
     an_x[k]=( an_x[k]+an_x[k+1]+ an_x[k+2]+ an_x[k+3])/(int)4;        
   }
-  // calculate threshold  
+  // Calculate threshold  
   n_th1=0; 
   for ( k=0 ; k<BUFFER_SIZE ;k++){
     n_th1 +=  an_x[k];
@@ -65,22 +65,21 @@ void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun
   if( n_th1>60) n_th1=60; // max allowed
 
   for ( k=0 ; k<15;k++) an_ir_valley_locs[k]=0;
-  // since we flipped signal, we use peak detector as valley detector
+  // Use peak detector as valley detector since we flipped signal
   maxim_find_peaks( an_ir_valley_locs, &n_npks, an_x, BUFFER_SIZE, n_th1, 4, 15 );//peak_height, peak_distance, max_num_peaks 
   n_peak_interval_sum =0;
 
-  //  load raw value again for SPO2 calculation : RED(=y) and IR(=X)
+  // Load raw value again for SPO2 calculation : RED(=y) and IR(=X)
   for (k=0 ; k<n_ir_buffer_length ; k++ )  {
       an_x[k] =  pun_ir_buffer[k] ; 
       an_y[k] =  pun_red_buffer[k] ; 
   }
 
-  // find precise min near an_ir_valley_locs
+  // Find precise min near an_ir_valley_locs
   n_exact_ir_valley_locs_count =n_npks; 
   
-  //using exact_ir_valley_locs , find ir-red DC andir-red AC for SPO2 calibration an_ratio
-  //finding AC/DC maximum of raw
-
+  // Using exact_ir_valley_locs , find ir-red DC andir-red AC for SPO2 calibration an_ratio
+  // Find AC/DC maximum of raw
   n_ratio_average =0; 
   n_i_ratio_count = 0; 
   for(k=0; k< 5; k++) an_ratio[k]=0;
@@ -91,7 +90,8 @@ void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun
       return;
     }
   }
-  // find max between two valley locations 
+  
+  // Find max between two valley locations 
   // and use an_ratio betwen AC compoent of Ir & Red and DC compoent of Ir & Red for SPO2 
   for (k=0; k< n_exact_ir_valley_locs_count-1; k++){
     n_y_dc_max= -16777216 ; 
@@ -116,7 +116,8 @@ void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun
       }
     }
   }
-  // choose median value since PPG signal may varies from beat to beat
+  
+  // Choose median value since PPG signal may varies from beat to beat
   maxim_sort_ascend(an_ratio, n_i_ratio_count);
   n_middle_idx= n_i_ratio_count/2;
 
@@ -136,8 +137,6 @@ void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun
   }
 }
 
-
-void maxim_find_peaks( int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height, int32_t n_min_distance, int32_t n_max_num )
 /**
 * \brief        Find peaks
 * \par          Details
@@ -145,13 +144,13 @@ void maxim_find_peaks( int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32
 *
 * \retval       None
 */
+void maxim_find_peaks( int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height, int32_t n_min_distance, int32_t n_max_num )
 {
   maxim_peaks_above_min_height( pn_locs, n_npks, pn_x, n_size, n_min_height );
   maxim_remove_close_peaks( pn_locs, n_npks, pn_x, n_min_distance );
   *n_npks = min( *n_npks, n_max_num );
 }
 
-void maxim_peaks_above_min_height( int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height )
 /**
 * \brief        Find peaks above n_min_height
 * \par          Details
@@ -159,6 +158,7 @@ void maxim_peaks_above_min_height( int32_t *pn_locs, int32_t *n_npks,  int32_t  
 *
 * \retval       None
 */
+void maxim_peaks_above_min_height( int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height )
 {
   int32_t i = 1, n_width;
   *n_npks = 0;
@@ -181,7 +181,6 @@ void maxim_peaks_above_min_height( int32_t *pn_locs, int32_t *n_npks,  int32_t  
   }
 }
 
-void maxim_remove_close_peaks(int32_t *pn_locs, int32_t *pn_npks, int32_t *pn_x, int32_t n_min_distance)
 /**
 * \brief        Remove peaks
 * \par          Details
@@ -189,6 +188,7 @@ void maxim_remove_close_peaks(int32_t *pn_locs, int32_t *pn_npks, int32_t *pn_x,
 *
 * \retval       None
 */
+void maxim_remove_close_peaks(int32_t *pn_locs, int32_t *pn_npks, int32_t *pn_x, int32_t n_min_distance)
 {
     
   int32_t i, j, n_old_npks, n_dist;
@@ -210,7 +210,6 @@ void maxim_remove_close_peaks(int32_t *pn_locs, int32_t *pn_npks, int32_t *pn_x,
   maxim_sort_ascend( pn_locs, *pn_npks );
 }
 
-void maxim_sort_ascend(int32_t  *pn_x, int32_t n_size) 
 /**
 * \brief        Sort array
 * \par          Details
@@ -218,6 +217,7 @@ void maxim_sort_ascend(int32_t  *pn_x, int32_t n_size)
 *
 * \retval       None
 */
+void maxim_sort_ascend(int32_t  *pn_x, int32_t n_size) 
 {
   int32_t i, j, n_temp;
   for (i = 1; i < n_size; i++) {
@@ -228,7 +228,6 @@ void maxim_sort_ascend(int32_t  *pn_x, int32_t n_size)
   }
 }
 
-void maxim_sort_indices_descend(  int32_t  *pn_x, int32_t *pn_indx, int32_t n_size)
 /**
 * \brief        Sort indices
 * \par          Details
@@ -236,6 +235,7 @@ void maxim_sort_indices_descend(  int32_t  *pn_x, int32_t *pn_indx, int32_t n_si
 *
 * \retval       None
 */ 
+void maxim_sort_indices_descend(  int32_t  *pn_x, int32_t *pn_indx, int32_t n_size)
 {
   int32_t i, j, n_temp;
   for (i = 1; i < n_size; i++) {
