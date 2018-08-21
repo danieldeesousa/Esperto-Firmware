@@ -22,7 +22,7 @@ char dateBT[INFO_BUFFER_SIZE];      // Date info MM/DD/YYYY
 char timeBT[INFO_BUFFER_SIZE];      // Time info HH:MM:SS MM
 char callBT[INFO_BUFFER_SIZE];      // Caller number info
 char textBT[INFO_BUFFER_SIZE];      // Text number info
-uint8_t bleRXBuffer[BLE_DATA_SIZE]; // Buffer containing incoming BLE data
+uint8_t bleRXBuffer[BLE_RX_DATA_SIZE]; // Buffer containing incoming BLE data
 uint8_t bleRXBbufferLen = 0;        // Size of incoming data
 uint8_t bleConnectionState = false; // Status of BLE connection
 
@@ -120,7 +120,6 @@ void updateDisplay(){
     u8g2.drawStr(0, 10, timeBT);
 
     u8g2.setFont(u8g2_font_profont22_tf);
-    
     // Display text text and phone number
     u8g2.setCursor(40, 38);
     u8g2.print("Text");
@@ -137,7 +136,7 @@ void updateDisplay(){
 
     // Display heart rate
     u8g2.drawXBMP(0, 54, 10, 10, heart);
-    if(heartRateAvg > 40){
+    if(heartRateAvg > HEARTRATE_MIN_VALID){
       u8g2.setCursor(14, 62);
       u8g2.print(String(heartRateAvg) + " bpm");
     }
@@ -239,13 +238,13 @@ void writeFRAM(){
 
 // Burst transfer data found in FRAM once connected to BLE device
 void burstTransferFRAM(){
-  uint8_t blePacket[20];
+  uint8_t blePacket[BLE_TX_DATA_SIZE];
   int i, j;
   
-  for(i = FRAM_DATA_BASE_ADDR; i < countFRAM; i+=20) // 20 byte packages
+  for(i = FRAM_DATA_BASE_ADDR; i < countFRAM; i+=BLE_TX_DATA_SIZE) // 20 byte packages
   {
     // Compile data packet
-    for(j = 0; (j < 20) && ((i+j) < countFRAM); j++)
+    for(j = 0; (j < BLE_TX_DATA_SIZE) && ((i+j) < countFRAM); j++)
     {
       blePacket[j] = fram.read8(i+j);
     }
@@ -358,7 +357,7 @@ void calculateHR(){
       {
         // Store heart rate
         heartRates[heartRateIndex++] = heartRate;
-        heartRateIndex %= ARRAY_SIZE_HR; // use modulus op. to determine current index
+        heartRateIndex %= ARRAY_SIZE_HR; // Use modulus op. to determine current index
   
         // Calcute average heart rate
         heartRateAvg = 0; // reset
@@ -372,7 +371,7 @@ void calculateHR(){
       }
     }
     
-    // Calculate SpO2 - pass in IR value so we do not have to retrieve it again
+    // Calculate SpO2 - pass in IR value so we do not have to retrieve IR again
     calculateSpO2(irValue);
 
     // Reset standby counter

@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    esperto_watch.h
   * @author  Daniel De Sousa
-  * @version V2.1.0
+  * @version V2.1.1
   * @date    18-August-2018
   * @brief   Main Esperto Watch library
-  * @note 	 Last revision: Added accel-display detection
+  * @note 	 Last revision: Added buffer size definitions
   ******************************************************************************
 */
 #ifndef __ESPERTO_WATCH_H
@@ -23,7 +23,8 @@ static MPU9250_DMP imu;                                   // Acceleromter
 // BLE definitions
 #define NOTIF_COUNTER_MAX 10 // How many seconds notification appears on screen for
 #define INFO_BUFFER_SIZE 15  // Size of buffers storing BLE data
-#define BLE_DATA_SIZE 21     // Size of incoming BLE data buffer
+#define BLE_RX_DATA_SIZE 21  // Size of incoming BLE data buffer
+#define BLE_TX_DATA_SIZE 20  // Size of outgoing BLE data buffer
 static int connected = FALSE;
 static volatile uint8_t set_connectable = 1;
 static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
