@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.1.0
-  * @date    18-Aug-2018
+  * @version V2.1.1
+  * @date    20-Aug-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: 
+  * @note    Last revision: Fixed step count
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -421,7 +421,7 @@ void countSteps(){
     // If a step is detected
     if (maxMinDiff > STEP_MIN_DIFF_THRESHOLD)
     {
-        stepCount+=2; // increase by 2 as 2 steps were detected
+        stepCount++;
         dmpStepCount = imu.dmpGetPedometerSteps();
     }
   }
