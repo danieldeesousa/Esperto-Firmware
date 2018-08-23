@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    esperto_watch.h
   * @author  Daniel De Sousa
-  * @version V2.1.1
-  * @date    18-August-2018
+  * @version V2.1.2
+  * @date    21-August-2018
   * @brief   Main Esperto Watch library
-  * @note 	 Last revision: Added buffer size definitions
+  * @note 	 Last revision: Updated accelz thresholds
   ******************************************************************************
 */
 #ifndef __ESPERTO_WATCH_H
@@ -54,8 +54,8 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 
 // Display-Acceleromter definitions
 // Note: these defintions are used for turning on display with wrist
-#define ACCEL_Z_MIN 500   // Minimum Z acceleration allowed for stable wrist after being multiplied by factor
-#define ACCEL_Z_MAX 900   // Maximum Z acceleration allowed for stable wrist after being multiplied by factor
+#define ACCEL_Z_MIN 600   // Minimum Z acceleration allowed for stable wrist after being multiplied by factor
+#define ACCEL_Z_MAX 1200   // Maximum Z acceleration allowed for stable wrist after being multiplied by factor
 #define ACCEL_FACTOR 1000 // Factor to simplify calculations
 #define DISPLAY_TIMEOUT 3 // 3 second timeout used for hysterisis
 
