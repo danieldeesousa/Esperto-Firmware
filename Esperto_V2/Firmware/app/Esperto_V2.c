@@ -1,6 +1,6 @@
 /*
   ******************************************************************************
-  * @file    Esperto_V2.ino
+  * @file    Esperto_V2.c
   * @author  Daniel De Sousa
   * @version V2.1.1
   * @date    20-Aug-2018
