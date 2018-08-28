@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    esperto_mxa30102_spo2.cpp
   * @author  Daniel De Sousa
-  * @version V2.1.0
-  * @date    18-August-2018
+  * @version V2.1.1
+  * @date    26-August-2018
   * @brief  
   ******************************************************************************
 */
@@ -11,241 +11,297 @@
 #include "arduino.h"
 #include "esperto_max30102_spo2.h"
 
+static void findPeaks(int32_t *locationIndices, int32_t *numPeaks,  int32_t  *inputData, int32_t size, int32_t minHeight, int32_t minDistance, int32_t maxNumPeaks);
+static void findPeaksAboveHeight(int32_t *locationIndices, int32_t *numPeaks,  int32_t  *inputData, int32_t size, int32_t minHeight);
+static void removeClosePeaks(int32_t *locationIndices, int32_t *numPeaks, int32_t *inputData, int32_t minDistance);
+static void sortAscend(int32_t *inputData, int32_t size);
+static void sortDescend(int32_t  *inputData, int32_t *pn_indx, int32_t size);
+
+static int32_t infraredRaw[BUFFER_SIZE];
+static int32_t redRaw[BUFFER_SIZE];
+
 /**
 * \brief        Calculate Spo2
 * \par          Details
-*               By detecting  peaks of PPG cycle and corresponding AC/DC of red/infra-red signal, the an_ratio for the SPO2 is computed.
+*               By detecting  peaks of PPG cycle and corresponding AC/DC of red/infra-red signal, the absorptionRatios for the SPO2 is computed.
 *               Since this algorithm is aiming for Arm M0/M3. formaula for SPO2 did not achieve the accuracy due to register overflow.
-*               Thus, accurate SPO2 is precalculated and save longo uch_spo2_table[] per each an_ratio.
+*               Thus, accurate SPO2 is precalculated and save longo uch_spo2_table[] per each absorptionRatios.
 *
-* \param[in]    *pun_ir_buffer           - IR sensor data buffer
-* \param[in]    n_ir_buffer_length      - IR sensor data buffer length
-* \param[in]    *pun_red_buffer          - Red sensor data buffer
-* \param[out]    *pn_spo2                - Calculated SpO2 value
-* \param[out]    *pch_spo2_valid         - 1 if the calculated SpO2 value is valid
-*
-* \retval       None
+* \param[in]    *infraredBuffer     - IR sensor data buffer
+* \param[in]    infraredBufferLen   - IR sensor data buffer length
+* \param[in]    *redBuffer          - Red sensor data buffer
+* \param[out]   *spO2Value          - Calculated SpO2 value
+* \param[out]   *spO2Valid          - 1 if the calculated SpO2 value is valid
 */
-void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun_red_buffer, int32_t *pn_spo2, int8_t *pch_spo2_valid)
+void calcSpO2(uint32_t *infraredBuffer, int32_t infraredBufferLen, uint32_t *redBuffer, int32_t *spO2Value, int8_t *spO2Valid)
 {
-  uint32_t un_ir_mean,un_only_once ;
-  int32_t k, n_i_ratio_count;
-  int32_t i, s, m, n_exact_ir_valley_locs_count, n_middle_idx;
-  int32_t n_th1, n_npks, n_c_min;   
-  int32_t an_ir_valley_locs[15] ;
-  int32_t n_peak_interval_sum;
-  
-  int32_t n_y_ac, n_x_ac;
-  int32_t n_spo2_calc; 
-  int32_t n_y_dc_max, n_x_dc_max; 
-  int32_t n_y_dc_max_idx, n_x_dc_max_idx; 
-  int32_t an_ratio[5], n_ratio_average; 
-  int32_t n_nume, n_denom ;
+  int32_t k;
 
-  // Calculates DC mean and subtract DC from ir
-  un_ir_mean =0; 
-  for (k=0 ; k<n_ir_buffer_length ; k++ ) un_ir_mean += pun_ir_buffer[k] ;
-  un_ir_mean =un_ir_mean/n_ir_buffer_length ;
+  // Calculates DC mean from infrared values
+  uint32_t infraredDCMean = 0; 
+  for (k = 0; k < infraredBufferLen; k++) 
+  {
+	infraredDCMean += infraredBuffer[k];
+  }
+  infraredDCMean =infraredDCMean/infraredBufferLen;
     
   // Remove DC and invert signal so that we can use peak detector as valley detector
-  for (k=0 ; k<n_ir_buffer_length ; k++ )  
-    an_x[k] = -1*(pun_ir_buffer[k] - un_ir_mean) ; 
+  // Note: we use a valley detecter as an infrared valley represents a heart beat
+  // HbO2 absorbs infrared. Increase in Hb02 (heart beat) is decrease in infrared reflection
+  for (k = 0; k < infraredBufferLen; k++)  
+  {
+	infraredRaw[k] = -1*(infraredBuffer[k] - infraredDCMean) ; 
+  }
     
-  // 4 pt Moving Average
-  for(k=0; k< BUFFER_SIZE-MA4_SIZE; k++){
-    an_x[k]=( an_x[k]+an_x[k+1]+ an_x[k+2]+ an_x[k+3])/(int)4;        
+  // Calculate 4 pt Moving Average - smoothes out the curve
+  for(k = 0; k < BUFFER_SIZE-MA4_SIZE; k++)
+  {
+    infraredRaw[k] = (infraredRaw[k] + infraredRaw[k+1] + infraredRaw[k+2] + infraredRaw[k+3])/(int)4;        
   }
-  // Calculate threshold  
-  n_th1=0; 
-  for ( k=0 ; k<BUFFER_SIZE ;k++){
-    n_th1 +=  an_x[k];
-  }
-  n_th1=  n_th1/ ( BUFFER_SIZE);
-  if( n_th1<30) n_th1=30; // min allowed
-  if( n_th1>60) n_th1=60; // max allowed
-
-  for ( k=0 ; k<15;k++) an_ir_valley_locs[k]=0;
-  // Use peak detector as valley detector since we flipped signal
-  maxim_find_peaks( an_ir_valley_locs, &n_npks, an_x, BUFFER_SIZE, n_th1, 4, 15 );//peak_height, peak_distance, max_num_peaks 
-  n_peak_interval_sum =0;
-
-  // Load raw value again for SPO2 calculation : RED(=y) and IR(=X)
-  for (k=0 ; k<n_ir_buffer_length ; k++ )  {
-      an_x[k] =  pun_ir_buffer[k] ; 
-      an_y[k] =  pun_red_buffer[k] ; 
-  }
-
-  // Find precise min near an_ir_valley_locs
-  n_exact_ir_valley_locs_count =n_npks; 
   
-  // Using exact_ir_valley_locs , find ir-red DC andir-red AC for SPO2 calibration an_ratio
-  // Find AC/DC maximum of raw
-  n_ratio_average =0; 
-  n_i_ratio_count = 0; 
-  for(k=0; k< 5; k++) an_ratio[k]=0;
-  for (k=0; k< n_exact_ir_valley_locs_count; k++){
-    if (an_ir_valley_locs[k] > BUFFER_SIZE ){
-      *pn_spo2 =  -999 ; // do not use SPO2 since valley loc is out of range
-      *pch_spo2_valid  = 0; 
+  // Calculate threshold (the average of all of the averages)
+  int32_t threshold = 0; 
+  for (k = 0; k < BUFFER_SIZE; k++)
+  {
+    threshold += infraredRaw[k];
+  }
+  threshold = threshold/(BUFFER_SIZE);
+  
+  // Limit the threshold
+  if(threshold < 30)
+  {
+	threshold = 30; // minimum threshold allowed
+  }	  
+  else if(threshold > 60)
+  {
+	threshold = 60; // max threshold allowed
+  } 
+
+  // Ensure infrared location buffer is cleared
+  int32_t infraredValleyLocations[15];
+  for (k = 0; k < 15; k++) 
+  {
+	infraredValleyLocations[k] = 0;
+  }
+  
+  // Use peak detector as valley detector since we flipped signal
+  int32_t numValleys;
+  findPeaks(infraredValleyLocations, &numValleys, infraredRaw, BUFFER_SIZE, threshold, 4, 15 );
+
+  // Load raw value again for SPO2 calculation
+  for (k = 0; k < infraredBufferLen; k++)  
+  {
+	infraredRaw[k] =  infraredBuffer[k]; 
+	redRaw[k] =  redBuffer[k]; 
+  }
+  
+  // Calculate absorptoin ratios
+  int32_t absorptionRatios[5]; 
+  int32_t absorptionRatioCount = 0; 
+  int32_t redAC, infraredAC;
+  int32_t absorptionNume, absorptionDenom;
+  
+  // Clear ratio buffer
+  for(k = 0; k < 5; k++)
+  {
+	absorptionRatios[k]=0;
+  }
+
+  // Check if any valley locations are out of range
+  for (k = 0; k < numValleys; k++)
+  {
+    if (infraredValleyLocations[k] > BUFFER_SIZE)
+	{
+      *spO2Value =  -999; 
+      *spO2Valid  = 0; 
       return;
     }
   }
   
-  // Find max between two valley locations 
-  // and use an_ratio betwen AC compoent of Ir & Red and DC compoent of Ir & Red for SPO2 
-  for (k=0; k< n_exact_ir_valley_locs_count-1; k++){
-    n_y_dc_max= -16777216 ; 
-    n_x_dc_max= -16777216; 
-    if (an_ir_valley_locs[k+1]-an_ir_valley_locs[k] >3){
-        for (i=an_ir_valley_locs[k]; i< an_ir_valley_locs[k+1]; i++){
-          if (an_x[i]> n_x_dc_max) {n_x_dc_max =an_x[i]; n_x_dc_max_idx=i;}
-          if (an_y[i]> n_y_dc_max) {n_y_dc_max =an_y[i]; n_y_dc_max_idx=i;}
+  // Find max between two valley locations and use absorption ratios betwen AC compoent of Ir & Red and DC compoent of Ir & Red for SPO2 
+  int32_t redDCMax = -16777216; 
+  int32_t infraredDCMax = -16777216; 
+  int32_t redDCMaxIndex, infraredDCMaxIndex; 
+  for (k = 0; k < numValleys-1; k++)
+  {
+	// Check if maximums are too close
+    if (infraredValleyLocations[k+1] - infraredValleyLocations[k] > 3)
+	{
+	  // Update maximums if points exist between the two adjacent maximums
+      for (int32_t i = infraredValleyLocations[k]; i < infraredValleyLocations[k+1]; i++)
+	  {
+		if (infraredRaw[i] > infraredDCMax) 
+		{
+		  infraredDCMax = infraredRaw[i]; 
+		  infraredDCMaxIndex = i;
+		}
+		if (redRaw[i] > redDCMax)
+		{
+		  redDCMax = redRaw[i]; 
+		  redDCMaxIndex = i;
+		}
       }
-      n_y_ac= (an_y[an_ir_valley_locs[k+1]] - an_y[an_ir_valley_locs[k] ] )*(n_y_dc_max_idx -an_ir_valley_locs[k]); //red
-      n_y_ac=  an_y[an_ir_valley_locs[k]] + n_y_ac/ (an_ir_valley_locs[k+1] - an_ir_valley_locs[k])  ; 
-      n_y_ac=  an_y[n_y_dc_max_idx] - n_y_ac;    // subracting linear DC compoenents from raw 
-      n_x_ac= (an_x[an_ir_valley_locs[k+1]] - an_x[an_ir_valley_locs[k] ] )*(n_x_dc_max_idx -an_ir_valley_locs[k]); // ir
-      n_x_ac=  an_x[an_ir_valley_locs[k]] + n_x_ac/ (an_ir_valley_locs[k+1] - an_ir_valley_locs[k]); 
-      n_x_ac=  an_x[n_y_dc_max_idx] - n_x_ac;      // subracting linear DC compoenents from raw 
-      n_nume=( n_y_ac *n_x_dc_max)>>7 ; //prepare X100 to preserve floating value
-      n_denom= ( n_x_ac *n_y_dc_max)>>7;
-      if (n_denom>0  && n_i_ratio_count <5 &&  n_nume != 0)
+	  
+	  // Calculate AC component for red
+      redAC = (redRaw[infraredValleyLocations[k+1]] - redRaw[infraredValleyLocations[k]])*(redDCMaxIndex - infraredValleyLocations[k]);
+      redAC = redRaw[infraredValleyLocations[k]] + redAC/(infraredValleyLocations[k+1] - infraredValleyLocations[k]); 
+      redAC = redRaw[redDCMaxIndex] - redAC;    // subracting linear DC compoenents from raw 
+      
+	  // Calculate AC component for infrared
+	  infraredAC = (infraredRaw[infraredValleyLocations[k+1]] - infraredRaw[infraredValleyLocations[k]])*(infraredDCMaxIndex - infraredValleyLocations[k]);
+      infraredAC = infraredRaw[infraredValleyLocations[k]] + infraredAC/(infraredValleyLocations[k+1] - infraredValleyLocations[k]); 
+      infraredAC = infraredRaw[redDCMaxIndex] - infraredAC;      // subracting linear DC compoenents from raw 
+      
+	  // Calculate absorption ratio
+	  absorptionNume = (redAC*infraredDCMax) >> 7;
+      absorptionDenom = (infraredAC*redDCMax) >> 7;
+      if (absorptionDenom > 0  && absorptionRatioCount < 5 && absorptionNume != 0)
       {   
-        an_ratio[n_i_ratio_count]= (n_nume*100)/n_denom ; //formular is ( n_y_ac *n_x_dc_max) / ( n_x_ac *n_y_dc_max) ;
-        n_i_ratio_count++;
+        absorptionRatios[absorptionRatioCount]= (absorptionNume*100)/absorptionDenom;
+        absorptionRatioCount++;
       }
     }
   }
   
-  // Choose median value since PPG signal may varies from beat to beat
-  maxim_sort_ascend(an_ratio, n_i_ratio_count);
-  n_middle_idx= n_i_ratio_count/2;
+  // Choose median value since PPG signal varies from beat to beat
+  int32_t ratioAverage; 
+  sortAscend(absorptionRatios, absorptionRatioCount);
+  int32_t middleIndex = absorptionRatioCount/2;
 
-  if (n_middle_idx >1)
-    n_ratio_average =( an_ratio[n_middle_idx-1] +an_ratio[n_middle_idx])/2; // use median
+  // Determine the average ratio
+  if (middleIndex > 1)
+  {
+	// Calculate median
+	ratioAverage = (absorptionRatios[middleIndex-1] + absorptionRatios[middleIndex])/2;
+  }
   else
-    n_ratio_average = an_ratio[n_middle_idx ];
-
-  if( n_ratio_average>2 && n_ratio_average <184){
-    n_spo2_calc= uch_spo2_table[n_ratio_average] ;
-    *pn_spo2 = n_spo2_calc ;
-    *pch_spo2_valid  = 1;//  float_SPO2 =  -45.060*n_ratio_average* n_ratio_average/10000 + 30.354 *n_ratio_average/100 + 94.845 ;  // for comparison with table
+  {
+	ratioAverage = absorptionRatios[middleIndex];
   }
-  else{
-    *pn_spo2 =  -999 ; // do not use SPO2 since signal an_ratio is out of range
-    *pch_spo2_valid  = 0; 
+
+  if(ratioAverage > 2 && ratioAverage < 184)
+  {
+	// Valid SpO2 found - use look up table
+    *spO2Value = uch_spo2_table[ratioAverage] ;
+    *spO2Valid  = 1;
+  }
+  else
+  {
+	// SpO2 is out of range
+    *spO2Value = -999 ;
+    *spO2Valid = 0; 
   }
 }
 
 /**
-* \brief        Find peaks
-* \par          Details
-*               Find at most MAX_NUM peaks above MIN_HEIGHT separated by at least MIN_DISTANCE
-*
-* \retval       None
+	Find at most maxNumPeaks peaks above minHeight separated by at least minDistance
 */
-void maxim_find_peaks( int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height, int32_t n_min_distance, int32_t n_max_num )
+void findPeaks(int32_t *locationIndices, int32_t *numValleys, int32_t *inputData, int32_t size, int32_t minHeight, int32_t minDistance, int32_t maxNumPeaks)
 {
-  maxim_peaks_above_min_height( pn_locs, n_npks, pn_x, n_size, n_min_height );
-  maxim_remove_close_peaks( pn_locs, n_npks, pn_x, n_min_distance );
-  *n_npks = min( *n_npks, n_max_num );
+  findPeaksAboveHeight(locationIndices, numValleys, inputData, size, minHeight);
+  removeClosePeaks(locationIndices, numValleys, inputData, minDistance);
+  *numValleys = min(*numValleys, maxNumPeaks);
 }
 
 /**
-* \brief        Find peaks above n_min_height
-* \par          Details
-*               Find all peaks above MIN_HEIGHT
-*
-* \retval       None
+	Find all peaks above a minimum height
 */
-void maxim_peaks_above_min_height( int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height )
+void findPeaksAboveHeight(int32_t *locationIndices, int32_t *numValleys, int32_t *inputData, int32_t size, int32_t minHeight)
 {
-  int32_t i = 1, n_width;
-  *n_npks = 0;
+  int32_t i = 1, width;
+  *numValleys = 0;
   
-  while (i < n_size-1){
-    if (pn_x[i] > n_min_height && pn_x[i] > pn_x[i-1]){      // find left edge of potential peaks
-      n_width = 1;
-      while (i+n_width < n_size && pn_x[i] == pn_x[i+n_width])  // find flat peaks
-        n_width++;
-      if (pn_x[i] > pn_x[i+n_width] && (*n_npks) < 15 ){      // find right edge of peaks
-        pn_locs[(*n_npks)++] = i;    
-        // for flat peaks, peak location is left edge
-        i += n_width+1;
+  while (i < size-1)
+  {
+	// Find left edge of potential peaks
+    if (inputData[i] > minHeight && inputData[i] > inputData[i-1])
+	{      
+      width = 1;
+	  // If peak is flat
+      while (i + width < size && inputData[i] == inputData[i+width])
+	  {
+		width++;
+	  }
+	  // Find right edge of potential peaks
+      if (inputData[i] > inputData[i+width] && (*numValleys) < 15 )
+	  {      
+        locationIndices[(*numValleys)++] = i;    
+        // Note: For flat peaks, peak location is left edge
+        i += width+1;
       }
       else
-        i += n_width;
+	  {
+		i += width;
+	  }
     }
     else
+	{
       i++;
+	}
   }
 }
 
 /**
-* \brief        Remove peaks
-* \par          Details
-*               Remove peaks separated by less than MIN_DISTANCE
-*
-* \retval       None
+	Remove peaks separated by less than a minimum value
 */
-void maxim_remove_close_peaks(int32_t *pn_locs, int32_t *pn_npks, int32_t *pn_x, int32_t n_min_distance)
+void removeClosePeaks(int32_t *locationIndices, int32_t *numPeaks, int32_t *inputData, int32_t minDistance)
 {
+  int32_t prevNumPeaks, dist;
     
-  int32_t i, j, n_old_npks, n_dist;
-    
-  /* Order peaks from large to small */
-  maxim_sort_indices_descend( pn_x, pn_locs, *pn_npks );
+  // Order peaks in descending order
+  sortDescend(inputData, locationIndices, *numPeaks);
 
-  for ( i = -1; i < *pn_npks; i++ ){
-    n_old_npks = *pn_npks;
-    *pn_npks = i+1;
-    for ( j = i+1; j < n_old_npks; j++ ){
-      n_dist =  pn_locs[j] - ( i == -1 ? -1 : pn_locs[i] ); // lag-zero peak of autocorr is at index -1
-      if ( n_dist > n_min_distance || n_dist < -n_min_distance )
-        pn_locs[(*pn_npks)++] = pn_locs[j];
+  // Loop through all peaks
+  for (int32_t i = -1; i < *numPeaks; i++ )
+  {
+    prevNumPeaks = *numPeaks;
+    *numPeaks = i + 1;
+    for (int32_t j = i + 1; j < prevNumPeaks; j++ )
+	{
+      dist = locationIndices[j] - (i == -1 ? -1 : locationIndices[i]); // lag-zero peak of autocorr is at index -1
+      if ( dist > minDistance || dist < -minDistance )
+	  {
+		locationIndices[(*numPeaks)++] = locationIndices[j];
+	  }
     }
   }
 
-  // Resort indices int32_to ascending order
-  maxim_sort_ascend( pn_locs, *pn_npks );
+  // Resort indices to ascending order
+  sortAscend(locationIndices, *numPeaks);
 }
 
 /**
-* \brief        Sort array
-* \par          Details
-*               Sort array in ascending order (insertion sort algorithm)
-*
-* \retval       None
+    Sort array in ascending order (insertion sort algorithm)
 */
-void maxim_sort_ascend(int32_t  *pn_x, int32_t n_size) 
+void sortAscend(int32_t *inputData, int32_t size) 
 {
-  int32_t i, j, n_temp;
-  for (i = 1; i < n_size; i++) {
-    n_temp = pn_x[i];
-    for (j = i; j > 0 && n_temp < pn_x[j-1]; j--)
-        pn_x[j] = pn_x[j-1];
-    pn_x[j] = n_temp;
+  int32_t temp;
+  
+  for (int32_t i = 1; i < size; i++) 
+  {
+    temp = inputData[i];
+    for (int32_t j = i; j > 0 && temp < inputData[j-1]; j--)
+	{
+		inputData[j] = inputData[j-1];
+	}
+    inputData[j] = temp;
   }
 }
 
 /**
-* \brief        Sort indices
-* \par          Details
-*               Sort indices according to descending order (insertion sort algorithm)
-*
-* \retval       None
+	Sort indices in descending order (insertion sort algorithm)
 */ 
-void maxim_sort_indices_descend(  int32_t  *pn_x, int32_t *pn_indx, int32_t n_size)
+void sortDescend(int32_t *inputData, int32_t *pn_indx, int32_t size)
 {
-  int32_t i, j, n_temp;
-  for (i = 1; i < n_size; i++) {
-    n_temp = pn_indx[i];
-    for (j = i; j > 0 && pn_x[n_temp] > pn_x[pn_indx[j-1]]; j--)
-      pn_indx[j] = pn_indx[j-1];
-    pn_indx[j] = n_temp;
+  int32_t temp;
+  
+  for (int32_t i = 1; i < size; i++) 
+  {
+    temp = pn_indx[i];
+    for (int32_t j = i; j > 0 && inputData[temp] > inputData[pn_indx[j-1]]; j--)
+	{
+		pn_indx[j] = pn_indx[j-1];
+	}
+    pn_indx[j] = temp;
   }
 }
-
-
-
-

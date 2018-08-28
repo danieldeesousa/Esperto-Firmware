@@ -3,8 +3,8 @@
   ******************************************************************************
   * @file    esperto_mxa30102_spo2.h
   * @author  Daniel De Sousa
-  * @version V2.1.0
-  * @date    18-August-2018
+  * @version V2.1.1
+  * @date    26-August-2018
   * @brief  
   ******************************************************************************
 */
@@ -29,16 +29,8 @@ const uint8_t uch_spo2_table[184]={ 95, 95, 95, 96, 96, 96, 97, 97, 97, 97, 97, 
               49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 31, 30, 29, 
               28, 27, 26, 25, 23, 22, 21, 20, 19, 17, 16, 15, 14, 12, 11, 10, 9, 7, 6, 5, 
               3, 2, 1 } ;
-static  int32_t an_x[ BUFFER_SIZE]; //ir
-static  int32_t an_y[ BUFFER_SIZE]; //red
 
 void calcSpO2(uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length, uint32_t *pun_red_buffer, int32_t *pn_spo2, int8_t *pch_spo2_valid);
-
-void maxim_find_peaks(int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height, int32_t n_min_distance, int32_t n_max_num);
-void maxim_peaks_above_min_height(int32_t *pn_locs, int32_t *n_npks,  int32_t  *pn_x, int32_t n_size, int32_t n_min_height);
-void maxim_remove_close_peaks(int32_t *pn_locs, int32_t *pn_npks, int32_t *pn_x, int32_t n_min_distance);
-void maxim_sort_ascend(int32_t  *pn_x, int32_t n_size);
-void maxim_sort_indices_descend(int32_t  *pn_x, int32_t *pn_indx, int32_t n_size);
 
 #endif
 
