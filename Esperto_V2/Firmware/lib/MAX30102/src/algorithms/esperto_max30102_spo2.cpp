@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    esperto_mxa30102_spo2.cpp
   * @author  Daniel De Sousa
-  * @version V2.1.1
+  * @version V2.1.2
   * @date    26-August-2018
   * @brief  
   ******************************************************************************
@@ -142,6 +142,16 @@ void calcSpO2(uint32_t *infraredBuffer, int32_t infraredBufferLen, uint32_t *red
 		}
       }
 	  
+	  /* Calculating AC involves:
+		Our goal: find the AC component of the NEXT peak in the series
+		- determine time stamp of current and next valley
+		- determine height of current and next valley and determine the difference
+		- calculate time steps between current valley and next peak (redDCMaxIndex)
+		- use linear interpolation to calculate expected change of height from valley to peak
+		- the DC component of the next peak is equal to the current valley height + the expected change
+		- subtract the height DC from the raw to get the AC
+	  */
+	  
 	  // Calculate AC component for red
       redAC = (redRaw[infraredValleyLocations[k+1]] - redRaw[infraredValleyLocations[k]])*(redDCMaxIndex - infraredValleyLocations[k]);
       redAC = redRaw[infraredValleyLocations[k]] + redAC/(infraredValleyLocations[k+1] - infraredValleyLocations[k]); 
@@ -275,12 +285,12 @@ void removeClosePeaks(int32_t *locationIndices, int32_t *numPeaks, int32_t *inpu
 */
 void sortAscend(int32_t *inputData, int32_t size) 
 {
-  int32_t temp;
+  int32_t temp, j;
   
   for (int32_t i = 1; i < size; i++) 
   {
     temp = inputData[i];
-    for (int32_t j = i; j > 0 && temp < inputData[j-1]; j--)
+    for (j = i; j > 0 && temp < inputData[j-1]; j--)
 	{
 		inputData[j] = inputData[j-1];
 	}
@@ -293,12 +303,12 @@ void sortAscend(int32_t *inputData, int32_t size)
 */ 
 void sortDescend(int32_t *inputData, int32_t *pn_indx, int32_t size)
 {
-  int32_t temp;
+  int32_t temp, j;
   
   for (int32_t i = 1; i < size; i++) 
   {
     temp = pn_indx[i];
-    for (int32_t j = i; j > 0 && inputData[temp] > inputData[pn_indx[j-1]]; j--)
+    for (j = i; j > 0 && inputData[temp] > inputData[pn_indx[j-1]]; j--)
 	{
 		pn_indx[j] = pn_indx[j-1];
 	}

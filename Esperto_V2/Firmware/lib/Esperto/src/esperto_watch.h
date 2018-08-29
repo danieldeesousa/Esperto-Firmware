@@ -64,7 +64,7 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 #define BATTERY_PIN 0                 // Analog 0: determine when battery is low/high
 #define REFERENCE_VOLTAGE (3.3)       // Default reference voltage on a 3.3V mcu
 #define ADC_RESOLUTION (1023.0)       // 10 bit ADC
-#define VOLTAGE_SHUTDOWN_THRESH (3.5) // Voltage at which peripherals / mcu will go to sleep
+#define VOLTAGE_SHUTDOWN_THRESH (3.55)// Voltage at which peripherals / mcu will go to sleep
 #define PERIPH_SHUTDOWN 1             // Shutdown peripheral flag 
 #define PERIPH_WAKEUP 0               // Wakeup peripheral flag
 #define STANDBY_TIMEOUT 30            // 30 secconds - Device goes into standby mode every 30s if no presence
