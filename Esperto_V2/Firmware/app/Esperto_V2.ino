@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.1.1
-  * @date    20-Aug-2018
+  * @version V2.1.2
+  * @date    07-September-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: Fixed step count
+  * @note    Last revision: Modified power management state machine
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -179,15 +179,17 @@ void updateDisplay(){
   
   // Draw BT logo only if connected
   if(bleConnectionState == true)
+  {
     u8g2.drawXBMP(118, 0, 10, 10, BT);
-
+  }
+  
   // Display battery status
   bool isChargeComplete = digitalRead(CHARGE_PIN); // HIGH when charging is complete
   // Display full battery
-  if ((inputVoltage >= 3.5 && inputVoltage <= 4.5) || isChargeComplete)
+  if ((inputVoltage >= VOLTAGE_BATT_HIGH_MIN && inputVoltage <= VOLTAGE_USB) || isChargeComplete)
     u8g2.drawXBMP(105, 0, 10, 10, battHigh);
   // Display charging battery - toggle when charging
-  else if (inputVoltage > 4.5 && !isChargeComplete){
+  else if (inputVoltage > VOLTAGE_USB && !isChargeComplete){
     if(ISR_CTR%3 == 0)
       u8g2.drawXBMP(105, 0, 10, 10, battLow);
     else if(ISR_CTR%3 == 1)
@@ -195,8 +197,11 @@ void updateDisplay(){
     else
       u8g2.drawXBMP(105, 0, 10, 10, battHigh);
   }
+  // Display medium battery
+  else if (inputVoltage < VOLTAGE_BATT_HIGH_MIN && inputVoltage > VOLTAGE_BATT_MED_MIN)
+    u8g2.drawXBMP(105, 0, 10, 10, battMed);
   // Display low battery
-  else if (inputVoltage < 3.5)
+  else if (inputVoltage < VOLTAGE_BATT_MED_MIN)
     u8g2.drawXBMP(105, 0, 10, 10, battLow);
 }
 
@@ -319,9 +324,10 @@ void calculateHR(){
   // Note: STANDBY_CTR is used in case user wants to check time but not wear device
   if(irValue < IR_STANDBY_THRESH && (STANDBY_CTR >= STANDBY_TIMEOUT))
   {
-      // Shutdown display and heart rate sensor
-      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+      // Shutdown heart rate sensor and display
       heartRateSensor.shutDown();
+      if(inputVoltage < VOLTAGE_USB)
+        u8g2.setPowerSave(PERIPH_SHUTDOWN); 
 
       // Enable motion on wake up interrupt
       imu.enableMotionWakeup(MOTION_WAKE_THRESH, WAKEUP_FREQ);
@@ -432,6 +438,7 @@ void countSteps(){
   
   // Check if display should be on based on wrist movement
   static uint32_t lastTimeAccel = millis();
+  static bool validRange;
   float accelZ = imu.calcAccel(imu.az)*ACCEL_FACTOR;
   
   if(accelZ < ACCEL_Z_MIN || accelZ > ACCEL_Z_MAX)
@@ -439,19 +446,27 @@ void countSteps(){
     // Ensure no BLE messages are ongoing before shutting down display
     if(callBT[0] == '\0' && textBT[0] == '\0' && ACC_DISPLAY_CTR >= DISPLAY_TIMEOUT)
     {
-      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+      if(inputVoltage < VOLTAGE_USB)
+        u8g2.setPowerSave(PERIPH_SHUTDOWN); 
     }
     lastTimeAccel = millis();
+    validRange = false;
   }
   if(millis() - lastTimeAccel > ACCEL_FACTOR*DISPLAY_TIMEOUT)
   {
-    // Turn on display and restart timer
-    if(ACC_DISPLAY_CTR >= DISPLAY_TIMEOUT)
+    // Turn on display and restart timer - turn off display if it was just turned on
+    if(ACC_DISPLAY_CTR >= DISPLAY_TIMEOUT && validRange == false)
     {
       u8g2.setPowerSave(PERIPH_WAKEUP); 
+      ACC_DISPLAY_CTR = 0;
     }
-    ACC_DISPLAY_CTR = 0;
+    else if((ACC_DISPLAY_CTR > DISPLAY_ON_TIMEOUT && validRange == true) || inputVoltage > VOLTAGE_USB)
+    {
+      if(inputVoltage < VOLTAGE_USB)
+        u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+    }
     lastTimeAccel = millis();
+    validRange = true;
   }
 }
 
@@ -550,32 +565,36 @@ void loop(){
   if(NOTIF_CTR >= NOTIF_COUNTER_MAX && (strlen(callBT) >= 10 || strlen(textBT) >= 10)){
     callBT[0] = '\0';
     textBT[0] = '\0';
-    u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+    if(inputVoltage < VOLTAGE_USB)
+      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
   }
 
   // Update display
-  if(updateDisplay_flag && deviceInit)
+  if(updateDisplay_flag)
   {     
     // Check on power inputs
     powerManage();
     
-    // Update display
-    u8g2.firstPage();
-    do {
-      updateDisplay();
-    } while ( u8g2.nextPage() );
-    
+    if(deviceInit)
+    {
+      // Update display
+      u8g2.firstPage();
+      do {
+        updateDisplay();
+      } while ( u8g2.nextPage() );
+  
+      // Reset steps at the start of each day
+      if(rtc.getHours() == 0 && rtc.getMinutes() == 0 && rtc.getSeconds() <= 10)
+      {
+        // Reset local steps and DMP steps
+        stepCount = 0;
+        imu.dmpSetPedometerSteps(0);
+        imu.dmpSetPedometerTime(0);
+      }
+    }
+
     // Reset display flag
     updateDisplay_flag = 0;
-
-    // Reset steps everyday
-    if(rtc.getHours() == 0 && rtc.getMinutes() == 0 && rtc.getSeconds() <= 10)
-    {
-      // Reset local steps and DMP steps
-      stepCount = 0;
-      imu.dmpSetPedometerSteps(0);
-      imu.dmpSetPedometerTime(0);
-    }
   }
 
   // Calculate steps and heart rate

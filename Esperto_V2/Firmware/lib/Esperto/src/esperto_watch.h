@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    esperto_watch.h
   * @author  Daniel De Sousa
-  * @version V2.1.2
-  * @date    21-August-2018
+  * @version V2.1.3
+  * @date    07-September-2018
   * @brief   Main Esperto Watch library
-  * @note 	 Last revision: Updated accelz thresholds
+  * @note 	 Last revision: Modified power management state machine
   ******************************************************************************
 */
 #ifndef __ESPERTO_WATCH_H
@@ -55,9 +55,10 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 // Display-Acceleromter definitions
 // Note: these defintions are used for turning on display with wrist
 #define ACCEL_Z_MIN 600   // Minimum Z acceleration allowed for stable wrist after being multiplied by factor
-#define ACCEL_Z_MAX 1200   // Maximum Z acceleration allowed for stable wrist after being multiplied by factor
+#define ACCEL_Z_MAX 1200  // Maximum Z acceleration allowed for stable wrist after being multiplied by factor
 #define ACCEL_FACTOR 1000 // Factor to simplify calculations
-#define DISPLAY_TIMEOUT 3 // 3 second timeout used for hysterisis
+#define DISPLAY_TIMEOUT 2 // 2 second timeout used for hysterisis
+#define DISPLAY_ON_TIMEOUT 3 // time which the display will be on
 
 // Power management definitions
 #define CHARGE_PIN 3                  // Digital 3: determine if charging is complete
@@ -65,6 +66,9 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 #define REFERENCE_VOLTAGE (3.3)       // Default reference voltage on a 3.3V mcu
 #define ADC_RESOLUTION (1023.0)       // 10 bit ADC
 #define VOLTAGE_SHUTDOWN_THRESH (3.55)// Voltage at which peripherals / mcu will go to sleep
+#define VOLTAGE_BATT_HIGH_MIN (3.7)
+#define VOLTAGE_BATT_MED_MIN (3.6)
+#define VOLTAGE_USB (4.5)
 #define PERIPH_SHUTDOWN 1             // Shutdown peripheral flag 
 #define PERIPH_WAKEUP 0               // Wakeup peripheral flag
 #define STANDBY_TIMEOUT 30            // 30 secconds - Device goes into standby mode every 30s if no presence
