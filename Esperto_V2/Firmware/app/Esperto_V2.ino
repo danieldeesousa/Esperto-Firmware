@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.1.2
-  * @date    07-September-2018
+  * @version V2.1.3
+  * @date    10-September-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: Modified power management state machine
+  * @note    Last revision: HR and step detection not used when USB is plugged in
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -64,7 +64,7 @@ void setup(){
   
   // Used for debugging purposes
   SerialUSB.begin(9600);
-  
+
   // Initialize display and display boot screen
   u8g2.begin();
   u8g2.firstPage();
@@ -326,8 +326,7 @@ void calculateHR(){
   {
       // Shutdown heart rate sensor and display
       heartRateSensor.shutDown();
-      if(inputVoltage < VOLTAGE_USB)
-        u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
 
       // Enable motion on wake up interrupt
       imu.enableMotionWakeup(MOTION_WAKE_THRESH, WAKEUP_FREQ);
@@ -337,7 +336,6 @@ void calculateHR(){
 
       // Disable interrupt and turn on peripherals
       imu.disableMotionWakeup();
-      u8g2.setPowerSave(PERIPH_WAKEUP); 
       heartRateSensor.wakeUp();
 
       // Reset standby counter
@@ -446,8 +444,7 @@ void countSteps(){
     // Ensure no BLE messages are ongoing before shutting down display
     if(callBT[0] == '\0' && textBT[0] == '\0' && ACC_DISPLAY_CTR >= DISPLAY_TIMEOUT)
     {
-      if(inputVoltage < VOLTAGE_USB)
-        u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
     }
     lastTimeAccel = millis();
     validRange = false;
@@ -460,10 +457,10 @@ void countSteps(){
       u8g2.setPowerSave(PERIPH_WAKEUP); 
       ACC_DISPLAY_CTR = 0;
     }
-    else if((ACC_DISPLAY_CTR > DISPLAY_ON_TIMEOUT && validRange == true) || inputVoltage > VOLTAGE_USB)
+    else if(ACC_DISPLAY_CTR > DISPLAY_ON_TIMEOUT && validRange == true)
     {
-      if(inputVoltage < VOLTAGE_USB)
-        u8g2.setPowerSave(PERIPH_SHUTDOWN); 
+      // Turn off display if it already has been turned on due to flick wrist
+      u8g2.setPowerSave(PERIPH_SHUTDOWN); 
     }
     lastTimeAccel = millis();
     validRange = true;
@@ -514,7 +511,7 @@ void powerManage(){
 // Main loop function
 void loop(){
   static bool deviceInit = 0; // Prevents time showing up without initial BLE connection
-  
+
   // Process any ACI commands or events from BLE
   bleProcess();
  
@@ -598,8 +595,17 @@ void loop(){
   }
 
   // Calculate steps and heart rate
-  countSteps();
-  calculateHR(); 
+  // Note: Do not calculate steps or HR when USB is plugged in
+  if(inputVoltage < VOLTAGE_USB)
+  {
+    countSteps();
+    calculateHR(); 
+  }
+  else
+  {
+    // Ensure device display is turned on
+    u8g2.setPowerSave(PERIPH_WAKEUP);
+  }
 
   // Determine whether data is sent to FRAM or BLE
   // Write to FRAM every 30 seconds
