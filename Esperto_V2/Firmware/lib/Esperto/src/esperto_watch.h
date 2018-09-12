@@ -65,6 +65,7 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 #define BATTERY_PIN 0                  // Analog 0: determine when battery is low/high
 #define REFERENCE_VOLTAGE (3.3)        // Default reference voltage on a 3.3V mcu
 #define ADC_RESOLUTION (1023.0)        // 10 bit ADC
+#define VOLTAGE_SHUTDOWN_THRESH (3.6)  // Voltage at which peripherals / mcu will go to sleep
 #define VOLTAGE_BATT_HIGH_MIN (3.7)    // Minimum battery voltage to be considered charged
 #define VOLTAGE_BATT_MED_MIN (3.65)	   // Minimum battery voltage to be considered medium
 #define VOLTAGE_USB (4.5)              // Voltage detected when USB is in
