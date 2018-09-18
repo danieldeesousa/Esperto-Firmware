@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.1.3
-  * @date    10-September-2018
+  * @version V2.1.4
+  * @date    17-September-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: HR and step detection not used when USB is plugged in
+  * @note    Last revision: Add shutdown voltage hysteresis
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -497,7 +497,7 @@ void powerManage(){
       // Once MCU is awoken, check input voltage again
       inputVoltageRaw = analogRead(BATTERY_PIN);
       inputVoltage = 2*(inputVoltageRaw / ADC_RESOLUTION) * REFERENCE_VOLTAGE; // 2* because of voltage divider config
-      if(inputVoltage >= VOLTAGE_SHUTDOWN_THRESH){
+      if(inputVoltage >= VOLTAGE_BATT_HIGH_MIN){
         // Input is sufficient - Turn on peripherals
         imu.shutDownPower(PERIPH_WAKEUP);
         u8g2.setPowerSave(PERIPH_WAKEUP); 
