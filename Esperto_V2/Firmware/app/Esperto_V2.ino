@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.1.4
-  * @date    17-September-2018
+  * @version V2.1.5
+  * @date    19-September-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: Add shutdown voltage hysteresis
+  * @note    Last revision: Reverse FRAM burst transfer
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -27,8 +27,8 @@ uint8_t bleRXBbufferLen = 0;        // Size of incoming data
 uint8_t bleConnectionState = false; // Status of BLE connection
 
 // Heart Rate Variables
-int heartRateAvg; // Average heart rate which will we be displayed
-uint16_t spO2Avg; // Average SpO2 which will be stored, displayed, and sent
+int heartRateAvg = 0; // Average heart rate which will we be displayed
+uint16_t spO2Avg = 0; // Average SpO2 which will be stored, displayed, and sent
 
 // MPU9250
 uint16_t stepCount = 0;    // Total number of steps taken
@@ -243,18 +243,42 @@ void writeFRAM(){
 
 // Burst transfer data found in FRAM once connected to BLE device
 void burstTransferFRAM(){
-  uint8_t blePacket[BLE_TX_DATA_SIZE];
-  int i, j;
-  
-  for(i = FRAM_DATA_BASE_ADDR; i < countFRAM; i+=BLE_TX_DATA_SIZE) // 20 byte packages
+  uint8_t blePacket[BLE_TX_DATA_SIZE]; // packet to be transmitted
+  uint16_t burstCount = 0;             // number of bytes transmitted
+  uint16_t dataLeft;                   // amount of data left to transfer in bytes
+  uint8_t numPayloads;                 // number of payloads to put in outgoing packet
+  uint16_t i, j, k;                    // generic counters
+
+  // Reverse through FRAM and read data
+  for(i = countFRAM; i >= FRAM_DATA_BASE_ADDR;) // 20 byte packages)
   {
-    // Compile data packet
-    for(j = 0; (j < BLE_TX_DATA_SIZE) && ((i+j) < countFRAM); j++)
+    // Determine how many payloads to read (4B each)
+    dataLeft = countFRAM - PAYLOAD_SIZE - burstCount;
+    if(dataLeft >= BLE_TX_DATA_SIZE)
+      numPayloads = BLE_TX_DATA_SIZE/PAYLOAD_SIZE;
+    else
+      numPayloads = dataLeft/PAYLOAD_SIZE;
+
+    // Check if any more data to transmit
+    if(numPayloads == 0)
+      break;
+    
+    // Compile data packet (up to 20B)
+    for(j = 1; j <= numPayloads; j++)
     {
-      blePacket[j] = fram.read8(i+j);
+      // Compile payload
+      for(k = 0; k < PAYLOAD_SIZE; k++)
+      {
+        blePacket[(j-1)*PAYLOAD_SIZE + k] = fram.read8(i - (j*PAYLOAD_SIZE) + k);
+      }
     }
-    // TODO: Possibly fix - add intermediate display if too slow
-    writeUARTTX((char*)blePacket, j);
+    burstCount += numPayloads*PAYLOAD_SIZE;
+
+    // Transmit data
+    writeUARTTX((char*)blePacket, numPayloads*PAYLOAD_SIZE);
+
+    // Decrease pointer to begining of new packet block
+    i -= numPayloads*PAYLOAD_SIZE;
   }
   countFRAM = FRAM_DATA_BASE_ADDR; // Go back to first FRAM address
 
@@ -376,7 +400,8 @@ void calculateHR(){
     }
     
     // Calculate SpO2 - pass in IR value so we do not have to retrieve IR again
-    calculateSpO2(irValue);
+    // Note: Disabled as we are not doing anything with SpO2 right now
+    // calculateSpO2(irValue);
 
     // Reset standby counter
     STANDBY_CTR = 0;

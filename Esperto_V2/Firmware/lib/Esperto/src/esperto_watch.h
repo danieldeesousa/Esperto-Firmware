@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    esperto_watch.h
   * @author  Daniel De Sousa
-  * @version V2.1.4
-  * @date    10-September-2018
+  * @version V2.1.5
+  * @date    19-September-2018
   * @brief   Main Esperto Watch library
-  * @note 	 Last revision: Modified battery thresholds
+  * @note 	 Last revision: Reverse FRAM burst transfer
   ******************************************************************************
 */
 #ifndef __ESPERTO_WATCH_H
@@ -43,6 +43,7 @@ static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
 #define FRAM_COUNT_ADDR_H 0   // Address of FRAM count MSB
 #define FRAM_COUNT_ADDR_L 1   // Address of FRAM count LSB
 #define FRAM_DATA_BASE_ADDR 4 // First address which data can be assigned to
+#define PAYLOAD_SIZE 4        // 2 bit steps, 1 bit HR, 1 bit SpO2
 #define DATA_INTERVAL 30      // Amount of time in seconds between data writes (Bluetooth and FRAM)
 
 // Acceleromter definitions
