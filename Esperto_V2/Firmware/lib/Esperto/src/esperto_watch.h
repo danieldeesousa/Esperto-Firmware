@@ -28,6 +28,11 @@ static MPU9250_DMP imu;                                   // Acceleromter
 static int connected = FALSE;
 static volatile uint8_t set_connectable = 1;
 static uint16_t UARTServHandle, UARTTXCharHandle, UARTRXCharHandle;
+static char beginBurst[BLE_TX_DATA_SIZE] = {
+  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+  255, 255, 255, 255, 255, 255, 255, 255, 255, 255
+};
+static char endBurst[BLE_TX_DATA_SIZE] = {0};
 
 // Heart rate definitions
 #define IR_STANDBY_THRESH 50000   // IR min for device to go into standy mode

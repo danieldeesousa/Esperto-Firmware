@@ -249,6 +249,9 @@ void burstTransferFRAM(){
   uint8_t numPayloads;                 // number of payloads to put in outgoing packet
   uint16_t i, j, k;                    // generic counters
 
+  // Send begining of burst header
+  writeUARTTX(beginBurst, BLE_TX_DATA_SIZE);
+
   // Reverse through FRAM and read data
   for(i = countFRAM; i >= FRAM_DATA_BASE_ADDR;) // 20 byte packages)
   {
@@ -261,7 +264,9 @@ void burstTransferFRAM(){
 
     // Check if any more data to transmit
     if(numPayloads == 0)
+    {
       break;
+    }
     
     // Compile data packet (up to 20B)
     for(j = 1; j <= numPayloads; j++)
@@ -281,6 +286,9 @@ void burstTransferFRAM(){
     i -= numPayloads*PAYLOAD_SIZE;
   }
   countFRAM = FRAM_DATA_BASE_ADDR; // Go back to first FRAM address
+
+  // Send end of burst footer
+  writeUARTTX(endBurst, BLE_TX_DATA_SIZE);
 
   // Write new FRAM count to first 2 bytes
   fram.write8(FRAM_COUNT_ADDR_H, countFRAM >> 8);
