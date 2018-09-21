@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    Esperto_V2.ino
   * @author  Daniel De Sousa
-  * @version V2.1.5
-  * @date    19-September-2018
+  * @version V2.1.6
+  * @date    20-September-2018
   * @brief   Main Esperto Watch application
-  * @note    Last revision: Reverse FRAM burst transfer
+  * @note    Last revision: Last minute bugs. NYC Build
   ******************************************************************************
 */
 #include "esperto_mpu9250.h"
@@ -102,9 +102,10 @@ void updateDisplay(){
   if (strlen(callBT) >= 10 && bleConnectionState == true)
   {
     u8g2.setFont(u8g2_font_profont11_tf);
-    // print time top left corner TODO: pass into update time function
-    u8g2.drawStr(0, 10, timeBT);
-
+    // print time top left corner
+    u8g2.setCursor(0, 10);
+    u8g2.print(String(rtc.getHours()) + ":" + String(rtc.getMinutes()));
+    
     u8g2.setFont(u8g2_font_profont22_tf);
     // display call text and phone number
     u8g2.setCursor(40, 38);
@@ -117,7 +118,8 @@ void updateDisplay(){
     u8g2.setFont(u8g2_font_profont11_tf);
     
     // Print time top left corner
-    u8g2.drawStr(0, 10, timeBT);
+    u8g2.setCursor(0, 10);
+    u8g2.print(String(rtc.getHours()) + ":" + String(rtc.getMinutes()));
 
     u8g2.setFont(u8g2_font_profont22_tf);
     // Display text text and phone number
@@ -490,7 +492,7 @@ void countSteps(){
       u8g2.setPowerSave(PERIPH_WAKEUP); 
       ACC_DISPLAY_CTR = 0;
     }
-    else if(ACC_DISPLAY_CTR > DISPLAY_ON_TIMEOUT && validRange == true)
+    else if(ACC_DISPLAY_CTR > DISPLAY_ON_TIMEOUT && validRange == true && callBT[0] == '\0' && textBT[0] == '\0')
     {
       // Turn off display if it already has been turned on due to flick wrist
       u8g2.setPowerSave(PERIPH_SHUTDOWN); 
@@ -530,7 +532,7 @@ void powerManage(){
       // Once MCU is awoken, check input voltage again
       inputVoltageRaw = analogRead(BATTERY_PIN);
       inputVoltage = 2*(inputVoltageRaw / ADC_RESOLUTION) * REFERENCE_VOLTAGE; // 2* because of voltage divider config
-      if(inputVoltage >= VOLTAGE_BATT_HIGH_MIN){
+      if(inputVoltage >= VOLTAGE_SHUTDOWN_THRESH){
         // Input is sufficient - Turn on peripherals
         imu.shutDownPower(PERIPH_WAKEUP);
         u8g2.setPowerSave(PERIPH_WAKEUP); 
@@ -581,12 +583,6 @@ void loop(){
     do {
       updateDisplay();
     } while ( u8g2.nextPage() );
-
-    // Check if FRAM data has been sent during this connection
-    if(isDataSent == false)
-    {
-      burstTransferFRAM();
-    }
 
     deviceInit = 1; // Established initial BLE connection
   }
@@ -650,6 +646,12 @@ void loop(){
   // Write to BLE every 30 seconds if connected and data is valid
   else if(DATA_CTR >= DATA_INTERVAL && bleConnectionState && heartRateAvg > HEARTRATE_MIN_VALID)
   {
+    // Check if FRAM data has been sent during this connection
+    if(isDataSent == false)
+    {
+      burstTransferFRAM();
+    }
+    
     // Compile packet
     uint8_t txBuf[4];
     txBuf[0] = heartRateAvg;
