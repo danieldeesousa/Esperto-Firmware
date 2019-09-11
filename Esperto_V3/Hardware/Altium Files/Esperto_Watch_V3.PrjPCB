@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=Project Outputs for Esperto_Watch_V3
+OutputPath=
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -274,114 +274,110 @@ Variation41=Designator=R180|UniqueId=\STWDBWKG|Kind=1|AlternatePart=
 ParamVariationCount=0
 
 [GeneratedDocument1]
-DocumentPath=Project Outputs for Esperto_Watch_V3\Design Rule Check - Esperto_Watch_V3.html
-DItemRevisionGUID=
-
-[GeneratedDocument2]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3-RoundHoles.TXT
 DItemRevisionGUID=
 
-[GeneratedDocument3]
+[GeneratedDocument2]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3-SlotHoles.TXT
 DItemRevisionGUID=
 
-[GeneratedDocument4]
+[GeneratedDocument3]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.DRR
 DItemRevisionGUID=
 
-[GeneratedDocument5]
+[GeneratedDocument4]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.EXTREP
 DItemRevisionGUID=
 
-[GeneratedDocument6]
+[GeneratedDocument5]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.G1
 DItemRevisionGUID=
 
-[GeneratedDocument7]
+[GeneratedDocument6]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GBL
 DItemRevisionGUID=
 
-[GeneratedDocument8]
+[GeneratedDocument7]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GBO
 DItemRevisionGUID=
 
-[GeneratedDocument9]
+[GeneratedDocument8]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GBP
 DItemRevisionGUID=
 
-[GeneratedDocument10]
+[GeneratedDocument9]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GBS
 DItemRevisionGUID=
 
-[GeneratedDocument11]
+[GeneratedDocument10]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GKO
 DItemRevisionGUID=
 
-[GeneratedDocument12]
+[GeneratedDocument11]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GM1
 DItemRevisionGUID=
 
-[GeneratedDocument13]
+[GeneratedDocument12]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GM5
 DItemRevisionGUID=
 
-[GeneratedDocument14]
+[GeneratedDocument13]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GM7
 DItemRevisionGUID=
 
-[GeneratedDocument15]
+[GeneratedDocument14]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GM9
 DItemRevisionGUID=
 
-[GeneratedDocument16]
+[GeneratedDocument15]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GM11
 DItemRevisionGUID=
 
-[GeneratedDocument17]
+[GeneratedDocument16]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GM13
 DItemRevisionGUID=
 
-[GeneratedDocument18]
+[GeneratedDocument17]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GM15
 DItemRevisionGUID=
 
-[GeneratedDocument19]
+[GeneratedDocument18]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GP1
 DItemRevisionGUID=
 
-[GeneratedDocument20]
+[GeneratedDocument19]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GPB
 DItemRevisionGUID=
 
-[GeneratedDocument21]
+[GeneratedDocument20]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GPT
 DItemRevisionGUID=
 
-[GeneratedDocument22]
+[GeneratedDocument21]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GTL
 DItemRevisionGUID=
 
-[GeneratedDocument23]
+[GeneratedDocument22]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GTO
 DItemRevisionGUID=
 
-[GeneratedDocument24]
+[GeneratedDocument23]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GTP
 DItemRevisionGUID=
 
-[GeneratedDocument25]
+[GeneratedDocument24]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.GTS
 DItemRevisionGUID=
 
-[GeneratedDocument26]
+[GeneratedDocument25]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.LDP
 DItemRevisionGUID=
 
-[GeneratedDocument27]
+[GeneratedDocument26]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.REP
 DItemRevisionGUID=
 
-[GeneratedDocument28]
+[GeneratedDocument27]
 DocumentPath=Project Outputs for Esperto_Watch_V3\Esperto_Watch_V3.RUL
 DItemRevisionGUID=
 
@@ -473,7 +469,7 @@ TemplateFilename=Board Stack Report.XLT
 TemplateStoreRelative=-1
 PCB_PrintColor=1
 SCH_PrintColor=0
-PrintQuality=-3
+PrintQuality=-4
 SCH_ShowNoErc=-1
 SCH_ShowParameter=-1
 SCH_ShowProbes=-1
@@ -492,7 +488,7 @@ SCH_HasExpandLogicalToPhysicalSheets=-1
 SaveSettingsToOutJob=0
 
 [Generic_EDE]
-OutputDir=Project Outputs for Esperto_Watch_V3
+OutputDir=
 
 [OutputGroup1]
 Name=Netlist Outputs
